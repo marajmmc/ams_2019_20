@@ -76,7 +76,7 @@ if($result)
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>AMS 2018_19.1</title>
+        <title>AMS 2019_20.1</title>
         <link rel="icon" type="image/ico" href="http://malikseeds.com/favicon.ico"/>
         <meta charset="utf-8">
 
