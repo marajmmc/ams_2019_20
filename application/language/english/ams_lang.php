@@ -376,7 +376,8 @@ $lang['LABEL_RAW_STOCK_OUT_DAMAGE'] = 'Damage';
 
 //users
 $lang['LABEL_RE_USERNAME'] = 'Re-type User name';
-$lang['LABEL_OGANOGRAM_VIEW'] = 'Organogram View';
+$lang['LABEL_ORGANOGRAM_VIEW'] = 'Organogram View';
+$lang['LABEL_TREE_VIEW'] = 'Tree View';
 $lang['LABEL_FATHER_NAME'] = 'Father Name';
 $lang['LABEL_MOTHER_NAME'] = 'Mother Name';
 $lang['LABEL_GENDER'] = 'Gender';
@@ -398,3 +399,5 @@ $lang['LABEL_CUSTOMER_TYPE'] = 'Customer Type';
 $lang['LABEL_MAP_ADDRESS'] = 'Google Map Link';
 $lang['LABEL_INCHARGE'] = 'In-charge';
 
+//custom
+$lang['LABEL_ORDERING'] = 'Ordering';

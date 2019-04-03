@@ -5,9 +5,6 @@ class Setup_category extends Root_Controller
     public $message;
     public $permissions;
     public $controller_url;
-    public $category_list;
-    public $category_parent_list;
-    public $category_tree_list;
 
     public function __construct()
     {
@@ -15,10 +12,6 @@ class Setup_category extends Root_Controller
         $this->message = "";
         $this->permissions = User_helper::get_permission(get_class($this));
         $this->controller_url = strtolower(get_class($this));
-
-        $this->category_list = array();
-        $this->category_parent_list = array();
-        $this->category_tree_list = array();
     }
 
     public function index($action = "list", $id = 0)
@@ -27,10 +20,14 @@ class Setup_category extends Root_Controller
         {
             $this->system_list();
         }
-        /*elseif ($action == "get_items")
+        elseif ($action == "get_items")
         {
             $this->system_get_items();
-        }*/
+        }
+        elseif ($action == "tree_view")
+        {
+            $this->system_tree_view();
+        }
         elseif ($action == "add")
         {
             $this->system_add();
@@ -43,9 +40,57 @@ class Setup_category extends Root_Controller
         {
             $this->system_save();
         }
+        elseif ($action == "set_preference_list")
+        {
+            $this->system_set_preference('list');
+        }
+        elseif ($action == "save_preference")
+        {
+            System_helper::save_preference();
+        }
         else
         {
             $this->system_list();
+        }
+    }
+
+    private function get_preference_headers($method, $length = 0)
+    {
+        $data = array();
+        if ($method == 'list')
+        {
+            $data['id'] = 1;
+            $data['name'] = 1;
+            if ($length > 0)
+            {
+                for ($i = 1; $i <= $length; $i++)
+                {
+                    $data['parent_' . $i] = 1;
+                }
+            }
+            $data['ordering'] = 1;
+            $data['status'] = 1;
+        }
+        return $data;
+    }
+
+    private function system_set_preference($method = 'list')
+    {
+        $user = User_helper::get_user();
+        if (isset($this->permissions['action6']) && ($this->permissions['action6'] == 1))
+        {
+            $data['system_preference_items'] = System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method));
+            $data['preference_method_name'] = $method;
+            $ajax['status'] = true;
+            $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view("preference_add_edit", $data, true));
+            $ajax['system_page_url'] = site_url($this->controller_url . '/index/set_preference_' . $method);
+            $this->json_return($ajax);
+        }
+        else
+        {
+            $ajax['status'] = false;
+            $ajax['system_message'] = $this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
         }
     }
 
@@ -53,9 +98,29 @@ class Setup_category extends Root_Controller
     {
         if (isset($this->permissions['action0']) && ($this->permissions['action0'] == 1))
         {
-            $data = array();
-            $data['items'] = $this->get_category_list();
+            $user = User_helper::get_user();
+            $method = 'list';
 
+            $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array(), 0, 0, array('ordering ASC'));
+            $end_child_parents = $this->get_end_childs_parent_chain($results);
+            $max_parent_length = 0;
+            foreach ($end_child_parents as $end_child_parent)
+            {
+                $length = sizeof($end_child_parent);
+                if ($length > $max_parent_length)
+                {
+                    $max_parent_length = $length;
+                }
+            }
+            $data['max_parent_length'] = $max_parent_length;
+
+            //Dynamic language for parents
+            for ($i = 1; $i <= $max_parent_length; $i++)
+            {
+                $this->lang->language['LABEL_PARENT_' . $i] = 'Parent Category-' . $i;
+            }
+
+            $data['system_preference_items'] = System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method, $max_parent_length));
             $data['title'] = "Category List";
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/list", $data, true));
@@ -74,11 +139,88 @@ class Setup_category extends Root_Controller
         }
     }
 
+    private function system_get_items()
+    {
+        $max_parent_length = $this->input->post('max_parent_length');
+        $result_category_names = array();
+        $items = array();
+
+        $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array(), 0, 0, array('parent ASC', 'ordering ASC'));
+        foreach ($results as $result)
+        {
+            $result_category_names[$result['id']] = array(
+                'name' => $result['name'],
+                'parent' => $result['parent']
+            );
+        }
+
+        foreach ($results as $result)
+        {
+            $ind = 1;
+            $arr = array(
+                'id' => $result['id'],
+                'name' => $result['name'],
+                'ordering' => $result['ordering'],
+                'status' => $result['status']
+            );
+
+            $current_parent_id = $result_category_names[$result['id']]['parent'];
+            while ($current_parent_id != 0) // Assign Every Immediate Parents
+            {
+                $arr['parent_' . $ind] = $result_category_names[$current_parent_id]['name'];
+                $current_parent_id = $result_category_names[$current_parent_id]['parent'];
+                $ind++;
+            }
+
+            while ($ind <= $max_parent_length) // Assign Remaining Blank Parents
+            {
+                $arr['parent_' . $ind] = '';
+                $ind++;
+            }
+
+            $items[] = $arr;
+        }
+        $this->json_return($items);
+    }
+
+    private function system_tree_view()
+    {
+        if (isset($this->permissions['action1']) && ($this->permissions['action1'] == 1))
+        {
+            $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
+            $data = array();
+            foreach ($results as $result)
+            {
+                $data['categories'][] = array(
+                    'id' => $result['id'],
+                    'name' => $result['name'],
+                    'ordering' => $result['ordering'],
+                    'parent' => ($result['parent'] > 0)? $result['parent']:""
+                );
+            }
+
+            $data['title'] = "Category Tree View";
+            $ajax['status'] = true;
+            $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/tree_view", $data, true));
+            if ($this->message)
+            {
+                $ajax['system_message'] = $this->message;
+            }
+            $ajax['system_page_url'] = site_url($this->controller_url . "/index/tree_view");
+            $this->json_return($ajax);
+        }
+        else
+        {
+            $ajax['status'] = false;
+            $ajax['system_message'] = $this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+    }
+
     private function system_add()
     {
         if (isset($this->permissions['action1']) && ($this->permissions['action1'] == 1))
         {
-            $data['title'] = "Create New Category";
             $data['item'] = Array(
                 'id' => 0,
                 'name' => '',
@@ -86,7 +228,8 @@ class Setup_category extends Root_Controller
                 'ordering' => 99,
                 'status' => $this->config->item('system_status_active')
             );
-            $data['categories'] = $this->get_category_list();
+
+            $data['categories'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
 
             $data['title'] = "Create New Category";
             $ajax['status'] = true;
@@ -127,7 +270,7 @@ class Setup_category extends Root_Controller
                 $ajax['system_message'] = 'Invalid Try.';
                 $this->json_return($ajax);
             }
-            $data['categories'] = $this->get_category_list();
+            $data['categories'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
 
             $data['title'] = "Edit Category :: " . $data['item']['name'];
             $ajax['status'] = true;
@@ -149,10 +292,6 @@ class Setup_category extends Root_Controller
 
     private function system_save()
     {
-        /*echo '<pre>';
-        print_r($this->input->post());
-        echo '</pre>'; die();*/
-
         $id = $this->input->post('id');
         $item = $this->input->post('item');
         $user = User_helper::get_user();
@@ -230,54 +369,34 @@ class Setup_category extends Root_Controller
         }
     }
 
-    private function get_category_list()
+    private function get_end_childs_parent_chain($results)
     {
+        $immediate_parents = $parents = $final_array = array();
 
-        $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array(), 0, 0, array('parent ASC', 'ordering ASC'));
-        $parents = array();
         foreach ($results as $result)
         {
-            $parents[$result['parent']][$result['id']] = $result['name'];
-            $this->category_list[$result['id']] = $result['name'];
+            $immediate_parents[$result['id']] = $result['parent']; // Generate Immediate Parent Array
+            $parents[$result['parent']][] = $result['id']; // Generates Array Only having Parents
         }
-        $this->category_parent_list = $parents;
-
-        foreach ($this->category_list as $key => $category)
+        foreach ($results as $result)
         {
-            $this->generate_category_tree($key);
-        }
-
-//        echo '\n\n';
-//        echo $tst = "---";
-//        $tst = substr($tst, 0, -1);
-//        echo '\n\n';
-//        echo $tst;
-//        echo '\n\n';
-//
-//
-//        echo '<pre>';
-//        print_r($this->category_list);
-//        print_r($this->category_tree_list);
-//        echo '</pre>';
-//        die('444444444444');
-
-        return $this->category_tree_list;
-    }
-
-    private function generate_category_tree($key, $prefix = "")
-    {
-        $this->category_tree_list[$key] = array(
-            'prefix' => $prefix,
-            'name' => $this->category_list[$key]
-        );
-
-        if (isset($this->category_parent_list[$key]))
-        {
-            foreach ($this->category_parent_list[$key] as $sub_key => $row)
+            if (!isset($parents[$result['id']]))
             {
-                $this->generate_category_tree($sub_key, "- " . $prefix);
+                $this->final_array($result['id'], $immediate_parents, $final_array); // Call with Each end child ID
             }
         }
+        return $final_array;
+    }
+
+    private function final_array($current_end_child, $immediate_parents, &$final_array)
+    {
+        $current_id = $current_end_child;
+        while ($immediate_parents[$current_id] != 0)
+        {
+            $final_array[$current_end_child][] = $immediate_parents[$current_id];
+            $current_id = $immediate_parents[$current_id];
+        }
+        return $final_array;
     }
 
     private function check_validation()

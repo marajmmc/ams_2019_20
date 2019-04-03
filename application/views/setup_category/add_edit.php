@@ -49,8 +49,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
         </div>
         <div style="" class="row show-grid">
             <div class="col-xs-4">
-                <label for="parent" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_PARENT'); ?>
-                    <span style="color:#FF0000">*</span></label>
+                <label for="parent" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_PARENT'); ?> &nbsp;</label>
             </div>
             <div class="col-sm-4 col-xs-8">
                 <select id="parent" name="item[parent]" data-placeholder="Select" class="form-control" tabindex="-1">
@@ -59,10 +58,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
                     foreach ($categories as $key => $category)
                     {
                         ?>
-                        <option value='<?php echo $key; ?>' <?php if ($key == $item['parent'])
-                        {
-                            echo ' selected';
-                        } ?>><?php echo $category['prefix'] . $category['name']; ?></option>
+                        <option value="<?php echo $category['id']; ?>" <?php echo ($category['id'] == $item['parent'])? 'selected':''; ?>><?php echo $category['name']; ?></option>
                     <?php
                     }
                     ?>
