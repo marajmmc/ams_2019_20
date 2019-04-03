@@ -187,7 +187,7 @@ class Setup_category extends Root_Controller
     {
         if (isset($this->permissions['action1']) && ($this->permissions['action1'] == 1))
         {
-            $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
+            $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array(), 0, 0, array('parent ASC', 'ordering ASC'));
             $data = array();
             foreach ($results as $result)
             {
