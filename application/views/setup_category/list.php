@@ -26,6 +26,25 @@ if(isset($CI->permissions['action2']) && ($CI->permissions['action2']==1))
         'data-action-link'=>site_url($CI->controller_url.'/index/edit')
     );
 }
+if(isset($CI->permissions['action4']) && ($CI->permissions['action4']==1))
+{
+    $action_buttons[]=array(
+        'type'=>'button',
+        'label'=>$CI->lang->line("ACTION_PRINT"),
+        'class'=>'button_action_download',
+        'data-title'=>"Print",
+        'data-print'=>true
+    );
+}
+if(isset($CI->permissions['action5']) && ($CI->permissions['action5']==1))
+{
+    $action_buttons[]=array(
+        'type'=>'button',
+        'label'=>$CI->lang->line("ACTION_DOWNLOAD"),
+        'class'=>'button_action_download',
+        'data-title'=>"Download"
+    );
+}
 $action_buttons[] = array(
     'label' => $CI->lang->line("ACTION_REFRESH"),
     'href' => site_url($CI->controller_url . '/index/list')
@@ -98,10 +117,16 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
                 columnsreorder: true,
                 columns: [
                     { text: '<?php echo $CI->lang->line('LABEL_ID'); ?>', pinned: true, dataField: 'id', width: '50', hidden: <?php echo $system_preference_items['id']?0:1;?>},
-                    { text: '<?php echo $CI->lang->line('LABEL_NAME'); ?>', pinned: true, dataField: 'name', width: '180', hidden: <?php echo $system_preference_items['name']?0:1;?>},
-                    <?php for($i = 1; $i <= $max_parent_length; $i++){ ?>
-                        { text: '<?php echo $CI->lang->line('LABEL_PARENT_' . $i); ?>', pinned: true, dataField: '<?php echo 'parent_'.$i; ?>', width: '180', hidden: <?php echo $system_preference_items['parent_'.$i]?0:1;?>},
-                    <?php } ?>
+                    <?php
+                    $extra_attribute = "filtertype: 'list',"; // Filter type: List, Only for 1st Category
+                    for($i = 1; $i <= $max_parent_length; $i++)
+                    {
+                    ?>
+                    { text: '<?php echo $CI->lang->line('LABEL_CATEGORY_' . $i); ?>', pinned: true, dataField: '<?php echo 'category_'.$i; ?>', <?php echo $extra_attribute; ?> width: '180', hidden: <?php echo $system_preference_items['category_'.$i]?0:1;?>},
+                    <?php
+                    $extra_attribute = "";
+                    }
+                    ?>
                     { text: '<?php echo $CI->lang->line('LABEL_ORDER'); ?>', dataField: 'ordering', width: '80', cellsalign: 'right', hidden: <?php echo $system_preference_items['ordering']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_STATUS');?>', dataField: 'status', cellsalign: 'center', filtertype: 'list', width: 100, hidden: <?php echo $system_preference_items['status']?0:1;?>}
                 ]

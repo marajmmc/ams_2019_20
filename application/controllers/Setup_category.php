@@ -12,6 +12,7 @@ class Setup_category extends Root_Controller
         $this->message = "";
         $this->permissions = User_helper::get_permission(get_class($this));
         $this->controller_url = strtolower(get_class($this));
+        $this->load->helper('category');
     }
 
     public function index($action = "list", $id = 0)
@@ -60,12 +61,11 @@ class Setup_category extends Root_Controller
         if ($method == 'list')
         {
             $data['id'] = 1;
-            $data['name'] = 1;
             if ($length > 0)
             {
                 for ($i = 1; $i <= $length; $i++)
                 {
-                    $data['parent_' . $i] = 1;
+                    $data['category_' . $i] = 1;
                 }
             }
             $data['ordering'] = 1;
@@ -101,12 +101,12 @@ class Setup_category extends Root_Controller
             $user = User_helper::get_user();
             $method = 'list';
 
-            $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array(), 0, 0, array('ordering ASC'));
-            $end_child_parents = $this->get_end_childs_parent_chain($results);
+            $data = array();
+            $category = Category_helper::get_category_parent_children();
             $max_parent_length = 0;
-            foreach ($end_child_parents as $end_child_parent)
+            foreach ($category['parents'] as $parent)
             {
-                $length = sizeof($end_child_parent);
+                $length = sizeof($parent);
                 if ($length > $max_parent_length)
                 {
                     $max_parent_length = $length;
@@ -114,10 +114,10 @@ class Setup_category extends Root_Controller
             }
             $data['max_parent_length'] = $max_parent_length;
 
-            //Dynamic language for parents
+            //Dynamic language for Sub Categories
             for ($i = 1; $i <= $max_parent_length; $i++)
             {
-                $this->lang->language['LABEL_PARENT_' . $i] = 'Parent Category-' . $i;
+                $this->lang->language['LABEL_CATEGORY_' . $i] = 'Category ' . $i;
             }
 
             $data['system_preference_items'] = System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method, $max_parent_length));
@@ -142,40 +142,29 @@ class Setup_category extends Root_Controller
     private function system_get_items()
     {
         $max_parent_length = $this->input->post('max_parent_length');
-        $result_category_names = array();
         $items = array();
 
-        $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array(), 0, 0, array('parent ASC', 'ordering ASC'));
-        foreach ($results as $result)
+        $category = Category_helper::get_category_parent_children();
+        foreach ($category['parents'] as $category_id => $parent_ids) // $parent_ids[$i]
         {
-            $result_category_names[$result['id']] = array(
-                'name' => $result['name'],
-                'parent' => $result['parent']
-            );
-        }
+            $length_actual = sizeof($parent_ids);
+            $length = ($length_actual - 2);
+            $index = 1;
 
-        foreach ($results as $result)
-        {
-            $ind = 1;
             $arr = array(
-                'id' => $result['id'],
-                'name' => $result['name'],
-                'ordering' => $result['ordering'],
-                'status' => $result['status']
+                'id' => $category['category'][$category_id]['id'],
+                'ordering' => $category['category'][$category_id]['ordering'],
+                'status' => $category['category'][$category_id]['status']
             );
-
-            $current_parent_id = $result_category_names[$result['id']]['parent'];
-            while ($current_parent_id != 0) // Assign Every Immediate Parents
+            for ($i = $length; $i >= 0; $i--)
             {
-                $arr['parent_' . $ind] = $result_category_names[$current_parent_id]['name'];
-                $current_parent_id = $result_category_names[$current_parent_id]['parent'];
-                $ind++;
+                $arr['category_' . ($index++)] = $category['category'][$parent_ids[$i]]['name'];
             }
+            $arr['category_' . ($index++)] = $category['category'][$category_id]['name'];
 
-            while ($ind <= $max_parent_length) // Assign Remaining Blank Parents
+            while ($index <= $max_parent_length)
             {
-                $arr['parent_' . $ind] = '';
-                $ind++;
+                $arr['category_' . ($index++)] = "";
             }
 
             $items[] = $arr;
@@ -195,7 +184,7 @@ class Setup_category extends Root_Controller
                     'id' => $result['id'],
                     'name' => $result['name'],
                     'ordering' => $result['ordering'],
-                    'parent' => ($result['parent'] > 0)? $result['parent']:""
+                    'parent' => ($result['parent'] > 0) ? $result['parent'] : ""
                 );
             }
 
@@ -221,6 +210,7 @@ class Setup_category extends Root_Controller
     {
         if (isset($this->permissions['action1']) && ($this->permissions['action1'] == 1))
         {
+            $data = array();
             $data['item'] = Array(
                 'id' => 0,
                 'name' => '',
@@ -261,7 +251,7 @@ class Setup_category extends Root_Controller
             {
                 $item_id = $this->input->post('id');
             }
-
+            $data = array();
             $data['item'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array('id =' . $item_id, 'status !="' . $this->config->item('system_status_delete') . '"'), 1, 0, array('id ASC'));
             if (!$data['item'])
             {
@@ -367,36 +357,6 @@ class Setup_category extends Root_Controller
             $ajax['system_message'] = $this->lang->line("MSG_SAVED_FAIL");
             $this->json_return($ajax);
         }
-    }
-
-    private function get_end_childs_parent_chain($results)
-    {
-        $immediate_parents = $parents = $final_array = array();
-
-        foreach ($results as $result)
-        {
-            $immediate_parents[$result['id']] = $result['parent']; // Generate Immediate Parent Array
-            $parents[$result['parent']][] = $result['id']; // Generates Array Only having Parents
-        }
-        foreach ($results as $result)
-        {
-            if (!isset($parents[$result['id']]))
-            {
-                $this->final_array($result['id'], $immediate_parents, $final_array); // Call with Each end child ID
-            }
-        }
-        return $final_array;
-    }
-
-    private function final_array($current_end_child, $immediate_parents, &$final_array)
-    {
-        $current_id = $current_end_child;
-        while ($immediate_parents[$current_id] != 0)
-        {
-            $final_array[$current_end_child][] = $immediate_parents[$current_id];
-            $current_id = $immediate_parents[$current_id];
-        }
-        return $final_array;
     }
 
     private function check_validation()

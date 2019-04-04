@@ -16,7 +16,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
 <style>
     .google-visualization-orgchart-node,
     .google-visualization-orgchart-nodesel {
-        border: none !important;
+        border:none !important;
     }
     /*td.google-visualization-orgchart-node{white-space:nowrap}*/
 </style>
@@ -46,7 +46,6 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
     function initiate_organogram() {
         google.charts.load('current', {packages: ["orgchart"]});
         google.charts.setOnLoadCallback(drawChart);
-
     }
 
     function drawChart() {
@@ -54,7 +53,6 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
         data.addColumn('string', 'Name');
         data.addColumn('string', 'Manager');
         data.addColumn('string', 'ToolTip');
-
         data.addRows([
             <?php
             if($categories){
