@@ -53,10 +53,10 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
         data.addColumn('string', 'Name');
         data.addColumn('string', 'Manager');
         data.addColumn('string', 'ToolTip');
-        <?php if($categories){ ?>
+        <?php if($locations){ ?>
             data.addRows([
-                <?php foreach($categories as $category){
-                    echo "[ {v:'{$category['id']}', f:'{$category['name']}'}, '{$category['parent']}', 'ID: {$category['id']}, Order: {$category['ordering']}'],";
+                <?php foreach($locations as $location){
+                    echo "[ {v:'{$location['id']}', f:'{$location['name']}'}, '{$location['parent']}', 'ID: {$location['id']}, Order: {$location['ordering']}'],";
                 } ?>
             ]);
         <?php } ?>

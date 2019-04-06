@@ -1,6 +1,6 @@
 <?php if (!defined('BASEPATH')) exit('No direct script access allowed');
 
-class Setup_category extends Root_Controller
+class Setup_location extends Root_Controller
 {
     public $message;
     public $permissions;
@@ -65,7 +65,7 @@ class Setup_category extends Root_Controller
             {
                 for ($i = 1; $i <= $length; $i++)
                 {
-                    $data['category_' . $i] = 1;
+                    $data['location_' . $i] = 1;
                 }
             }
             $data['ordering'] = 1;
@@ -102,9 +102,9 @@ class Setup_category extends Root_Controller
             $method = 'list';
 
             $data = array();
-            $category = Category_helper::get_category_parent_children();
+            $location = Category_helper::get_location_parent_children();
             $max_parent_length = 0;
-            foreach ($category['parents'] as $parent)
+            foreach ($location['parents'] as $parent)
             {
                 $length = sizeof($parent);
                 if ($length > $max_parent_length)
@@ -114,14 +114,14 @@ class Setup_category extends Root_Controller
             }
             $data['max_parent_length'] = $max_parent_length;
 
-            //Dynamic language for Sub Categories
+            //Dynamic language for Sub Locations
             for ($i = 1; $i <= $max_parent_length; $i++)
             {
-                $this->lang->language['LABEL_CATEGORY_' . $i] = 'Category ' . $i;
+                $this->lang->language['LABEL_LOCATION_' . $i] = 'Location ' . $i;
             }
 
             $data['system_preference_items'] = System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method, $max_parent_length));
-            $data['title'] = "Category List";
+            $data['title'] = "Location List";
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/list", $data, true));
             if ($this->message)
@@ -144,27 +144,27 @@ class Setup_category extends Root_Controller
         $max_parent_length = $this->input->post('max_parent_length');
         $items = array();
 
-        $category = Category_helper::get_category_parent_children();
-        foreach ($category['parents'] as $category_id => $parent_ids) // $parent_ids[$i]
+        $location = Category_helper::get_location_parent_children();
+        foreach ($location['parents'] as $location_id => $parent_ids) // $parent_ids[$i]
         {
             $length_actual = sizeof($parent_ids);
             $length = ($length_actual - 2);
             $index = 1;
 
             $arr = array(
-                'id' => $category['category'][$category_id]['id'],
-                'ordering' => $category['category'][$category_id]['ordering'],
-                'status' => $category['category'][$category_id]['status']
+                'id' => $location['location'][$location_id]['id'],
+                'ordering' => $location['location'][$location_id]['ordering'],
+                'status' => $location['location'][$location_id]['status']
             );
             for ($i = $length; $i >= 0; $i--)
             {
-                $arr['category_' . ($index++)] = $category['category'][$parent_ids[$i]]['name'];
+                $arr['location_' . ($index++)] = $location['location'][$parent_ids[$i]]['name'];
             }
-            $arr['category_' . ($index++)] = $category['category'][$category_id]['name'];
+            $arr['location_' . ($index++)] = $location['location'][$location_id]['name'];
 
             while ($index <= $max_parent_length)
             {
-                $arr['category_' . ($index++)] = "";
+                $arr['location_' . ($index++)] = "";
             }
 
             $items[] = $arr;
@@ -176,12 +176,12 @@ class Setup_category extends Root_Controller
     {
         if (isset($this->permissions['action1']) && ($this->permissions['action1'] == 1))
         {
-            $results = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array(), 0, 0, array('parent ASC', 'ordering ASC'));
+            $results = Query_helper::get_info($this->config->item('table_ams_setup_locations'), array('*'), array(), 0, 0, array('parent ASC', 'ordering ASC'));
             $data = array();
-            $data['categories'] = array();
+            $data['locations'] = array();
             foreach ($results as $result)
             {
-                $data['categories'][] = array(
+                $data['locations'][] = array(
                     'id' => $result['id'],
                     'name' => $result['name'],
                     'ordering' => $result['ordering'],
@@ -189,7 +189,7 @@ class Setup_category extends Root_Controller
                 );
             }
 
-            $data['title'] = "Category Tree View";
+            $data['title'] = "Location Tree View";
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/tree_view", $data, true));
             if ($this->message)
@@ -220,9 +220,9 @@ class Setup_category extends Root_Controller
                 'status' => $this->config->item('system_status_active')
             );
 
-            $data['categories'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
+            $data['locations'] = Query_helper::get_info($this->config->item('table_ams_setup_locations'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
 
-            $data['title'] = "Create New Category";
+            $data['title'] = "Create New Location";
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/add_edit", $data, true));
             if ($this->message)
@@ -253,7 +253,7 @@ class Setup_category extends Root_Controller
                 $item_id = $this->input->post('id');
             }
             $data = array();
-            $data['item'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array('id =' . $item_id, 'status !="' . $this->config->item('system_status_delete') . '"'), 1, 0, array('id ASC'));
+            $data['item'] = Query_helper::get_info($this->config->item('table_ams_setup_locations'), array('*'), array('id =' . $item_id, 'status !="' . $this->config->item('system_status_delete') . '"'), 1, 0, array('id ASC'));
             if (!$data['item'])
             {
                 System_helper::invalid_try(__FUNCTION__, $item_id, 'Edit Not Exists');
@@ -261,9 +261,9 @@ class Setup_category extends Root_Controller
                 $ajax['system_message'] = 'Invalid Try.';
                 $this->json_return($ajax);
             }
-            $data['categories'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
+            $data['locations'] = Query_helper::get_info($this->config->item('table_ams_setup_locations'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
 
-            $data['title'] = "Edit Category :: " . $data['item']['name'];
+            $data['title'] = "Edit Location :: " . $data['item']['name'];
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/add_edit", $data, true));
             if ($this->message)
@@ -298,7 +298,7 @@ class Setup_category extends Root_Controller
                 $this->json_return($ajax);
             }
 
-            $result = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('id =' . $id, 'status != "' . $this->config->item('system_status_delete') . '"'), 1);
+            $result = Query_helper::get_info($this->config->item('table_ams_setup_locations'), '*', array('id =' . $id, 'status != "' . $this->config->item('system_status_delete') . '"'), 1);
             if (!$result)
             {
                 System_helper::invalid_try(__FUNCTION__, $id, 'Update Not Exists');
@@ -329,13 +329,13 @@ class Setup_category extends Root_Controller
         {
             $item['date_updated'] = $time;
             $item['user_updated'] = $user->user_id;
-            Query_helper::update($this->config->item('table_ams_setup_categories'), $item, array('id=' . $id));
+            Query_helper::update($this->config->item('table_ams_setup_locations'), $item, array('id=' . $id));
         }
         else // ADD
         {
             $item['date_created'] = $time;
             $item['user_created'] = $user->user_id;
-            Query_helper::add($this->config->item('table_ams_setup_categories'), $item);
+            Query_helper::add($this->config->item('table_ams_setup_locations'), $item);
         }
         $this->db->trans_complete(); //DB Transaction Handle END
 
