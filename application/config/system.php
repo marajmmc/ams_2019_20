@@ -23,6 +23,7 @@ $config['system_status_approved']='Approved';
 $config['system_status_delivered']='Delivered';
 $config['system_status_received']='Received';
 $config['system_status_rejected']='Rejected';
+$config['system_status_rollback']='Rollback';
 
 $config['system_base_url_profile_picture']='http://45.251.59.5/login_2018_19/';
 $config['system_base_url_picture']='http://45.251.59.5/ams_2019_20/';

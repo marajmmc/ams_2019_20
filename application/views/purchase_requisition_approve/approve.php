@@ -15,7 +15,7 @@ $action_buttons[]=array(
 );
 $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
 ?>
-<form id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save_forward');?>" method="post">
+<form id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save_approve');?>" method="post">
     <input type="hidden" id="id" name="id" value="<?php echo $item['id']?>" />
     <div class="row widget">
         <div class="widget-header">
@@ -58,12 +58,24 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             }
             ?>
             <tr>
-                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_NAME');?></label></td>
-                <td><?php echo $item['name'];?></td>
+                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_DATE');?></label></td>
+                <td><?php echo System_helper::display_date($item['date_requisition']);?></td>
+            </tr>
+            <tr>
+                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_MODEL_NUMBER');?></label></td>
+                <td><?php echo $item['model_number'];?></td>
             </tr>
             <tr>
                 <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_QUANTITY_TOTAL');?></label></td>
                 <td><?php echo System_helper::get_string_quantity($item['quantity_total']);?></td>
+            </tr>
+            <tr>
+                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_AMOUNT_PRICE_UNIT');?></label></td>
+                <td><?php echo System_helper::get_string_amount($item['amount_price_unit']);?></td>
+            </tr>
+            <tr>
+                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_AMOUNT_PRICE_TOTAL');?></label></td>
+                <td><?php echo System_helper::get_string_amount($item['amount_price_total']);?></td>
             </tr>
             <tr>
                 <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_SPECIFICATION');?></label></td>
@@ -82,13 +94,23 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         <hr/>
         <div class="row show-grid">
             <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_FORWARD');?><span style="color:#FF0000">*</span></label>
+                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_APPROVED');?><span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <select id="status_requisition_forward" class="form-control" name="item[status_requisition_forward]">
+                <select id="status_approve" class="form-control" name="item[status_approve]">
                     <option value=""><?php echo $CI->lang->line('SELECT');?></option>
-                    <option value="<?php echo $this->config->item('system_status_forwarded')?>"><?php echo $this->config->item('system_status_forwarded')?></option>
+                    <option value="<?php echo $this->config->item('system_status_approved')?>"><?php echo $this->config->item('system_status_approved')?></option>
+                    <option value="<?php echo $this->config->item('system_status_rollback')?>"><?php echo $this->config->item('system_status_rollback')?></option>
+                    <option value="<?php echo $this->config->item('system_status_rejected')?>"><?php echo $this->config->item('system_status_rejected')?></option>
                 </select>
+            </div>
+        </div>
+        <div class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right"><span id="label_remarks"><?php echo $CI->lang->line('LABEL_REMARKS');?></span> <span style="color:#FF0000">*</span></label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <textarea name="item[remarks_approve]" id="remarks_approve" class="form-control" ><?php echo $item['remarks_approve'];?></textarea>
             </div>
         </div>
         <div class="row show-grid">
@@ -97,7 +119,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             </div>
             <div class="col-sm-4 col-xs-4">
                 <div class="action_button pull-right">
-                    <button id="button_action_save" type="button" class="btn" data-form="#save_form" data-message-confirm="Are You Sure Forward Notice?">Save</button>
+                    <button id="button_action_save" type="button" class="btn" data-form="#save_form" data-message-confirm="Are You Sure Requisition Approved?">Save</button>
                 </div>
             </div>
             <div class="col-sm-4 col-xs-4">
@@ -113,7 +135,9 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         system_off_events();
         system_preset({controller:'<?php echo $CI->router->class; ?>'});
         $(".datepicker").datepicker({dateFormat : display_date_format});
-
+        $("#status_approve").on('change', function(){
+            $('#label_remarks').html($(this).val()+' Remarks');
+        })
     });
 </script>
 

@@ -9,21 +9,14 @@ if(isset($CI->permissions['action0']) && ($CI->permissions['action0']==1))
         'href'=>site_url($CI->controller_url.'/index/list_all')
     );
 }
-if(isset($CI->permissions['action1']) && ($CI->permissions['action1']==1))
-{
-    $action_buttons[]=array(
-        'label'=>$CI->lang->line("ACTION_NEW"),
-        'href'=>site_url($CI->controller_url.'/index/add')
-    );
-}
 if(isset($CI->permissions['action2']) && ($CI->permissions['action2']==1))
 {
     $action_buttons[]=array
     (
         'type'=>'button',
-        'label'=>$CI->lang->line('ACTION_EDIT'),
+        'label'=>$CI->lang->line('ACTION_EDIT').' Payment',
         'class'=>'button_jqx_action',
-        'data-action-link'=>site_url($CI->controller_url.'/index/edit')
+        'data-action-link'=>site_url($CI->controller_url.'/index/list_payment')
     );
 }
 if(isset($CI->permissions['action4']) && ($CI->permissions['action4']==1))
@@ -58,9 +51,9 @@ if((isset($CI->permissions['action7']) && ($CI->permissions['action7']==1)))
     $action_buttons[]=array
     (
         'type'=>'button',
-        'label'=>'Forward',
+        'label'=>'Payment Approved',
         'class'=>'button_jqx_action',
-        'data-action-link'=>site_url($CI->controller_url.'/index/forward')
+        'data-action-link'=>site_url($CI->controller_url.'/index/payment_approve')
     );
 }
 $action_buttons[]=array(
@@ -169,8 +162,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     { text: '<?php echo $CI->lang->line('LABEL_AMOUNT_PRICE_TOTAL'); ?>', dataField: 'amount_price_total',width:'80',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['amount_price_total']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_SPECIFICATION'); ?>', dataField: 'specification',width:'300', hidden: <?php echo $system_preference_items['specification']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_REASON'); ?>', dataField: 'reason',width:'300', hidden: <?php echo $system_preference_items['reason']?0:1;?>},
-                    { text: '<?php echo $CI->lang->line('LABEL_REMARKS'); ?>', dataField: 'remarks',width:'300', hidden: <?php echo $system_preference_items['remarks']?0:1;?>},
-                    { text: '<?php echo $CI->lang->line('LABEL_REVISION_COUNT_REQUEST'); ?>',dataField: 'revision_count_request',width:'30',hidden: <?php echo $system_preference_items['revision_count_request']?0:1;?>}
+                    { text: '<?php echo $CI->lang->line('LABEL_REMARKS'); ?>', dataField: 'remarks',width:'300', hidden: <?php echo $system_preference_items['remarks']?0:1;?>}
                 ]
             });
     });

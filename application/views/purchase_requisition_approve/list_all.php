@@ -148,8 +148,9 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 columns:
                     [
                         { text: '<?php echo $CI->lang->line('LABEL_ID'); ?>', dataField: 'id',width:'50',cellsAlign:'right',hidden: <?php echo $system_preference_items['id']?0:1;?>},
+                        { text: '<?php echo $CI->lang->line('LABEL_DATE'); ?>', dataField: 'date_requisition',width:'100', hidden: <?php echo $system_preference_items['date_requisition']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_CATEGORY_NAME'); ?>', dataField: 'category_name',width:'200', hidden: <?php echo $system_preference_items['category_name']?0:1;?>},
-                        { text: '<?php echo $CI->lang->line('LABEL_NAME'); ?>', dataField: 'name',width:'200', hidden: <?php echo $system_preference_items['name']?0:1;?>},
+                        { text: '<?php echo $CI->lang->line('LABEL_MODEL_NUMBER'); ?>', dataField: 'model_number',width:'100', hidden: <?php echo $system_preference_items['model_number']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_QUANTITY_TOTAL'); ?>', dataField: 'quantity_total',width:'80',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['quantity_total']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_AMOUNT_PRICE_UNIT'); ?>', dataField: 'amount_price_unit',width:'80',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['amount_price_unit']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_AMOUNT_PRICE_TOTAL'); ?>', dataField: 'amount_price_total',width:'80',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['amount_price_total']?0:1;?>},
@@ -157,9 +158,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                         { text: '<?php echo $CI->lang->line('LABEL_REASON'); ?>', dataField: 'reason',width:'300', hidden: <?php echo $system_preference_items['reason']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_REMARKS'); ?>', dataField: 'remarks',width:'300', hidden: <?php echo $system_preference_items['remarks']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_REVISION_COUNT_REQUEST'); ?>',dataField: 'revision_count_request',width:'30',hidden: <?php echo $system_preference_items['revision_count_request']?0:1;?>},
-                        { text: '<?php echo $CI->lang->line('LABEL_STATUS'); ?>',dataField: 'status',width:'80',filtertype: 'list',hidden: <?php echo $system_preference_items['status']?0:1;?>},
-                        { text: '<?php echo $CI->lang->line('LABEL_STATUS_REQUISITION_FORWARD'); ?>',dataField: 'status_requisition_forward',width:'80',filtertype: 'list',hidden: <?php echo $system_preference_items['status_requisition_forward']?0:1;?>},
-                        { text: '<?php echo $CI->lang->line('LABEL_STATUS_REQUISITION_APPROVE'); ?>',dataField: 'status_requisition_approve',width:'80',filtertype: 'list',hidden: <?php echo $system_preference_items['status_requisition_approve']?0:1;?>}
+                        { text: '<?php echo $CI->lang->line('LABEL_STATUS_APPROVE'); ?>',dataField: 'status_approve',width:'80',filtertype: 'list',hidden: <?php echo $system_preference_items['status_approve']?0:1;?>}
                     ]
             });
     });

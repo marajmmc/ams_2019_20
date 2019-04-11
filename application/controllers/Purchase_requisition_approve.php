@@ -20,15 +20,18 @@ class Purchase_requisition_approve extends Root_Controller
     }
     private function language_labels()
     {
+        $this->lang->language['LABEL_DATE_REQUISITION']='Date';
         $this->lang->language['LABEL_CATEGORY_NAME']='Category';
+        $this->lang->language['LABEL_USER_NAME']='Employee Name';
+        $this->lang->language['LABEL_MODEL_NUMBER']='Model/Serial/ID';
         $this->lang->language['LABEL_AMOUNT_PRICE_UNIT']='Unit Price';
         $this->lang->language['LABEL_AMOUNT_PRICE_TOTAL']='Total Price';
         $this->lang->language['LABEL_REASON']='Reason';
         $this->lang->language['LABEL_SPECIFICATION']='Specification';
         $this->lang->language['LABEL_REVISION_COUNT_REQUEST']='Number of Edit';
         $this->lang->language['LABEL_ITEMS']='Add More Items';
-        $this->lang->language['LABEL_STATUS_REQUISITION_FORWARD']='Forward Status';
-        $this->lang->language['LABEL_STATUS_REQUISITION_APPROVE']='Approve Status';
+        $this->lang->language['LABEL_STATUS_FORWARD']='Forward Status';
+        $this->lang->language['LABEL_STATUS_APPROVE']='Approve Status';
     }
     public function index($action="list",$id=0)
     {
@@ -48,25 +51,13 @@ class Purchase_requisition_approve extends Root_Controller
         {
             $this->system_get_items_all();
         }
-        elseif($action=="add")
+        elseif($action=="approve")
         {
-            $this->system_add();
+            $this->system_approve($id);
         }
-        elseif($action=="edit")
+        elseif($action=="save_approve")
         {
-            $this->system_edit($id);
-        }
-        elseif($action=="save")
-        {
-            $this->system_save();
-        }
-        elseif($action=="forward")
-        {
-            $this->system_forward($id);
-        }
-        elseif($action=="save_forward")
-        {
-            $this->system_save_forward();
+            $this->system_save_approve();
         }
         elseif($action=="set_preference")
         {
@@ -91,8 +82,9 @@ class Purchase_requisition_approve extends Root_Controller
         if($method=='list')
         {
             $data['id']= 1;
+            $data['date_requisition']= 1;
             $data['category_name']= 1;
-            $data['name']= 1;
+            $data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -104,8 +96,9 @@ class Purchase_requisition_approve extends Root_Controller
         else if($method=='list_all')
         {
             $data['id']= 1;
+            $data['date_requisition']= 1;
             $data['category_name']= 1;
-            $data['name']= 1;
+            $data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -114,8 +107,8 @@ class Purchase_requisition_approve extends Root_Controller
             $data['remarks']= 1;
             $data['revision_count_request']= 1;
             $data['status']= 1;
-            $data['status_requisition_forward']= 1;
-            $data['status_requisition_approve']= 1;
+            $data['status_forward']= 1;
+            $data['status_approve']= 1;
         }
         else
         {
@@ -150,7 +143,7 @@ class Purchase_requisition_approve extends Root_Controller
         if(isset($this->permissions['action0'])&&($this->permissions['action0']==1))
         {
             $data['system_preference_items']= System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method));
-            $data['title']="Requisition Pending List";
+            $data['title']="Purchase Order Approve Pending List";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/list",$data,true));
             if($this->message)
@@ -169,13 +162,36 @@ class Purchase_requisition_approve extends Root_Controller
     }
     private function system_get_items()
     {
+        $user = User_helper::get_user();
+        $designation_child_ids = Ams_helper::get_child_ids_designation($user->designation);
         $this->db->from($this->config->item('table_ams_requisition_request').' item');
         $this->db->select('item.*, category.name category_name');
+
         $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+
+        $this->db->join($this->config->item('table_login_setup_user') . ' user', 'user.id = item.user_created', 'INNER');
+        $this->db->select('user.employee_id');
+
+        $this->db->join($this->config->item('table_login_setup_user_info') . ' user_info', 'user_info.user_id = user.id', 'INNER');
+        $this->db->select('user_info.name');
+
+        $this->db->join($this->config->item('table_login_setup_designation') . ' designation', 'designation.id = user_info.designation', 'LEFT');
+        $this->db->select('designation.name AS designation');
+
         $this->db->where('item.status',$this->config->item('system_status_active'));
-        $this->db->where('item.status_requisition_forward',$this->config->item('system_status_pending'));
-        $this->db->order_by('item.id','ASC');
+        $this->db->where('item.status_forward',$this->config->item('system_status_forwarded'));
+        $this->db->where('item.status_approve',$this->config->item('system_status_pending'));
+        $this->db->where('user_info.revision', 1);
+        $this->db->order_by('item.id','DESC');
+        if ($user->user_group != $this->config->item('USER_GROUP_SUPER')) // If not SuperAdmin, Then Only child's designation list will appear.
+        {
+            $this->db->where_in('designation.id', $designation_child_ids);
+        }
         $items=$this->db->get()->result_array();
+        foreach($items as &$item)
+        {
+            $item['date_requisition']=System_helper::display_date($item['date_requisition']);
+        }
         $this->json_return($items);
     }
     private function system_list_all()
@@ -185,14 +201,14 @@ class Purchase_requisition_approve extends Root_Controller
         if(isset($this->permissions['action0'])&&($this->permissions['action0']==1))
         {
             $data['system_preference_items']= System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method));
-            $data['title']="Requisition All List";
+            $data['title']="Purchase Order Approve All List";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/list_all",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url);
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/list_all');
             $this->json_return($ajax);
         }
         else
@@ -204,221 +220,39 @@ class Purchase_requisition_approve extends Root_Controller
     }
     private function system_get_items_all()
     {
+        $user = User_helper::get_user();
+        $designation_child_ids = Ams_helper::get_child_ids_designation($user->designation);
+
         $this->db->from($this->config->item('table_ams_requisition_request').' item');
         $this->db->select('item.*, category.name category_name');
+
         $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+
+        $this->db->join($this->config->item('table_login_setup_user') . ' user', 'user.id = item.user_created', 'INNER');
+        $this->db->select('user.employee_id');
+
+        $this->db->join($this->config->item('table_login_setup_user_info') . ' user_info', 'user_info.user_id = user.id', 'INNER');
+        $this->db->select('user_info.name');
+
+        $this->db->join($this->config->item('table_login_setup_designation') . ' designation', 'designation.id = user_info.designation', 'LEFT');
+        $this->db->select('designation.name AS designation');
+
         $this->db->where('item.status !=',$this->config->item('system_status_delete'));
-        $this->db->order_by('item.id','ASC');
+        $this->db->where('item.status_forward',$this->config->item('system_status_forwarded'));
+        $this->db->where('user_info.revision', 1);
+        $this->db->order_by('item.id','DESC');
+        if ($user->user_group != $this->config->item('USER_GROUP_SUPER')) // If not SuperAdmin, Then Only child's designation list will appear.
+        {
+            $this->db->where_in('designation.id', $designation_child_ids);
+        }
         $items=$this->db->get()->result_array();
+        foreach($items as &$item)
+        {
+            $item['date_requisition']=System_helper::display_date($item['date_requisition']);
+        }
         $this->json_return($items);
     }
-    private function system_add()
-    {
-        if(isset($this->permissions['action1'])&&($this->permissions['action1']==1))
-        {
-            $data['title']="Create New Requisition";
-            $data['item']['id']=0;
-            $data['item']['name']='';
-            $data['item']['quantity_total']=1;
-            $data['item']['amount_price_unit']=0;
-            $data['item']['amount_price_total']=0;
-            $data['item']['specification']='';
-            $data['item']['reason']='';
-            $data['item']['remarks']='';
-            $data['categories']=$this->get_parent_wise_task();
-
-            $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_edit",$data,true));
-            if($this->message)
-            {
-                $ajax['system_message']=$this->message;
-            }
-            $ajax['system_page_url']=site_url($this->controller_url.'/index/add');
-            $this->json_return($ajax);
-        }
-        else
-        {
-            $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->json_return($ajax);
-        }
-    }
-    private function system_edit($id)
-    {
-        if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
-        {
-            if($id>0)
-            {
-                $item_id=$id;
-            }
-            else
-            {
-                $item_id=$this->input->post('id');
-            }
-
-            $data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
-            if(!$data['item'])
-            {
-                System_helper::invalid_try('Edit Non Exists',$item_id);
-                $ajax['status']=false;
-                $ajax['system_message']='Invalid Requisition.';
-                $this->json_return($ajax);
-            }
-            if($data['item']['status']==$this->config->item('system_status_delete'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']='Requisition deleted.';
-                $this->json_return($ajax);
-            }
-            if($data['item']['status_requisition_forward']==$this->config->item('system_status_forwarded'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']='Requisition already forwarded.';
-                $this->json_return($ajax);
-            }
-            if($data['item']['status_requisition_approve']==$this->config->item('system_status_rejected'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']='Requisition already rejected.';
-                $this->json_return($ajax);
-            }
-            $data['categories']=$this->get_parent_wise_task();
-
-            $data['title']="Edit Requisition :: ". $data['item']['id'];
-            $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_edit",$data,true));
-            if($this->message)
-            {
-                $ajax['system_message']=$this->message;
-            }
-            $ajax['system_page_url']=site_url($this->controller_url.'/index/edit/'.$item_id);
-            $this->json_return($ajax);
-        }
-        else
-        {
-            $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->json_return($ajax);
-        }
-    }
-    private function system_save()
-    {
-        $id = $this->input->post("id");
-        $user = User_helper::get_user();
-        $time=time();
-        $item_head=$this->input->post('item');
-        $categories=$this->input->post('categories');
-        $category_id=0;
-        foreach($categories['parent_id'] as $key=>$value)
-        {
-            if($value)
-            {
-                $category_id=$value;
-            }
-
-        }
-        if(!$category_id)
-        {
-            $ajax['status']=false;
-            $ajax['system_message']='Category is required.';
-            $this->json_return($ajax);
-        }
-        if($id>0)
-        {
-            if(!(isset($this->permissions['action2']) && ($this->permissions['action2']==1)))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-                $this->json_return($ajax);
-            }
-            $result=Query_helper::get_info($this->config->item('table_ams_requisition_request'),'*',array('id ='.$id),1);
-            if(!$result)
-            {
-                System_helper::invalid_try('Update Non Exists',$id);
-                $ajax['status']=false;
-                $ajax['system_message']='Invalid Requisition.';
-                $this->json_return($ajax);
-            }
-            if($result['status']==$this->config->item('system_status_delete'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']='Requisition deleted.';
-                $this->json_return($ajax);
-            }
-            if($result['status_requisition_forward']==$this->config->item('system_status_forwarded'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']='Requisition already forwarded.';
-                $this->json_return($ajax);
-            }
-            if($result['status_requisition_approve']==$this->config->item('system_status_rejected'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']='Requisition already rejected.';
-                $this->json_return($ajax);
-            }
-        }
-        else
-        {
-            if(!(isset($this->permissions['action1']) && ($this->permissions['action1']==1)))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
-                $this->json_return($ajax);
-            }
-        }
-        if(!$this->check_validation())
-        {
-            $ajax['status']=false;
-            $ajax['system_message']=$this->message;
-            $this->json_return($ajax);
-        }
-
-        $this->db->trans_start();  //DB Transaction Handle START
-
-        if($id>0)
-        {
-            //$data=array();
-            $item_head['date_updated'] = $time;
-            $item_head['user_updated'] = $user->user_id;
-            $item_head['category_id']=$category_id;
-            $item_head['amount_price_total']=($item_head['quantity_total']*$item_head['amount_price_unit']);
-            $this->db->set('revision_count_request', 'revision_count_request+1', FALSE);
-            Query_helper::update($this->config->item('table_ams_requisition_request'),$item_head, array('id='.$id), false);
-        }
-        else
-        {
-            $item_head['date_requisition']=$time;
-            $item_head['date_created']=$time;
-            $item_head['user_created']=$user->user_id;
-            $item_head['category_id']=$category_id;
-            $item_head['amount_price_total']=($item_head['quantity_total']*$item_head['amount_price_unit']);
-            $item_head['revision_count_request']=1;
-            Query_helper::add($this->config->item('table_ams_requisition_request'),$item_head, false);
-        }
-
-        $this->db->trans_complete();   //DB Transaction Handle END
-        if ($this->db->trans_status() === TRUE)
-        {
-            $save_and_new=$this->input->post('system_save_new_status');
-            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
-            if($save_and_new==1)
-            {
-                $this->system_add();
-            }
-            else
-            {
-                $this->system_list();
-            }
-        }
-        else
-        {
-            $ajax['status']=false;
-            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
-            $this->json_return($ajax);
-        }
-    }
-    private function system_forward($id)
+    private function system_approve($id)
     {
         if(isset($this->permissions['action7'])&&($this->permissions['action7']==1))
         {
@@ -431,43 +265,51 @@ class Purchase_requisition_approve extends Root_Controller
                 $item_id=$this->input->post('id');
             }
 
-            $data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
+            //$data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
+            $this->db->from($this->config->item('table_ams_requisition_request').' item');
+            $this->db->select('item.*, category.name category_name');
+
+            $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+
+            $this->db->where('item.status !=',$this->config->item('system_status_delete'));
+            $this->db->where('item.id',$item_id);
+            $data['item']=$this->db->get()->row_array();
             if(!$data['item'])
             {
-                System_helper::invalid_try('Edit Non Exists',$item_id);
+                System_helper::invalid_try('Approve Non Exists',$item_id);
                 $ajax['status']=false;
                 $ajax['system_message']='Invalid Requisition.';
                 $this->json_return($ajax);
             }
-            if($data['item']['status']==$this->config->item('system_status_delete'))
+            if($data['item']['status_forward']==$this->config->item('system_status_pending'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Requisition deleted.';
+                $ajax['system_message']='Purchase Order already forwarded.';
                 $this->json_return($ajax);
             }
-            if($data['item']['status_requisition_forward']==$this->config->item('system_status_forwarded'))
+            if($data['item']['status_approve']==$this->config->item('system_status_rejected'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Requisition already forwarded.';
+                $ajax['system_message']='Purchase Order already rejected.';
                 $this->json_return($ajax);
             }
-            if($data['item']['status_requisition_approve']==$this->config->item('system_status_rejected'))
+            if($data['item']['status_approve']==$this->config->item('system_status_approved'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Requisition already rejected.';
+                $ajax['system_message']='Purchase Order already approve.';
                 $this->json_return($ajax);
             }
             $data['categories']=$this->get_parent_wise_task();
             $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
-            $data['title']="Requisition Forward";
+            $data['title']="Purchase Order Approve";
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/forward",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/approve",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url.'/index/forward/'.$item_id);
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/approve/'.$item_id);
             $this->json_return($ajax);
         }
         else
@@ -477,7 +319,7 @@ class Purchase_requisition_approve extends Root_Controller
             $this->json_return($ajax);
         }
     }
-    private function system_save_forward()
+    private function system_save_approve()
     {
         $id = $this->input->post("id");
         $user = User_helper::get_user();
@@ -491,11 +333,38 @@ class Purchase_requisition_approve extends Root_Controller
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->json_return($ajax);
             }
-            if($item_head['status_requisition_forward']!=$this->config->item('system_status_forwarded'))
+            if(!$item_head['status_approve'])
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Forward Field is required.';
+                $ajax['system_message']='Approved/Rollback/Reject field is required.';
                 $this->json_return($ajax);
+            }
+            if($item_head['status_approve']==$this->config->item('system_status_rollback'))
+            {
+                if(!($item_head['remarks_approve']))
+                {
+                    $ajax['status']=false;
+                    $ajax['system_message']='Rollback remarks field is required.';
+                    $this->json_return($ajax);
+                }
+            }
+            else if($item_head['status_approve']==$this->config->item('system_status_rejected'))
+            {
+                if(!($item_head['remarks_approve']))
+                {
+                    $ajax['status']=false;
+                    $ajax['system_message']='Reject remarks field is required.';
+                    $this->json_return($ajax);
+                }
+            }
+            else
+            {
+                if($item_head['status_approve']!=$this->config->item('system_status_approved'))
+                {
+                    $ajax['status']=false;
+                    $ajax['system_message']='Approved/Rollback/Reject field is required.';
+                    $this->json_return($ajax);
+                }
             }
         }
         else
@@ -506,12 +375,25 @@ class Purchase_requisition_approve extends Root_Controller
         }
         $this->db->trans_start();  //DB Transaction Handle START
 
+        /*$item_head['date_approved']=$time;
+        $item_head['user_approved']=$user->user_id;
+        $this->db->set('revision_count_approved', 'revision_count_approved+1', FALSE);
+        Query_helper::update($this->config->item('table_ams_requisition_request'),$item_head,array('id='.$id));*/
         $data=array();
-
-        $data['date_requisition_forwarded']=$time;
-        $data['user_requisition_forwarded']=$user->user_id;
-        $data['status_requisition_forward']=$item_head['status_requisition_forward'];
-        $this->db->set('revision_count_forwarded', 'revision_count_forwarded+1', FALSE);
+        if($item_head['status_approve']==$this->config->item('system_status_rollback'))
+        {
+            $data['remarks_approve']=$item_head['remarks_approve'];
+            $data['status_forward']=$this->config->item('system_status_pending');
+            $this->db->set('revision_count_rollback', 'revision_count_rollback+1', FALSE);
+        }
+        else
+        {
+            $data['date_approved']=$time;
+            $data['user_approved']=$user->user_id;
+            $data['remarks_approve']=$item_head['remarks_approve'];
+            $data['status_approve']=$item_head['status_approve'];
+            $this->db->set('revision_count_approved', 'revision_count_approved+1', FALSE);
+        }
         Query_helper::update($this->config->item('table_ams_requisition_request'),$data,array('id='.$id));
 
         $this->db->trans_complete();   //DB Transaction Handle END
@@ -528,26 +410,11 @@ class Purchase_requisition_approve extends Root_Controller
             $this->json_return($ajax);
         }
     }
-    private function check_validation()
-    {
-        $this->load->library('form_validation');
-        $this->form_validation->set_rules('item[name]',$this->lang->line('LABEL_NAME'),'required');
-        $this->form_validation->set_rules('item[quantity_total]',$this->lang->line('LABEL_QUANTITY_TOTAL'),'required');
-        $this->form_validation->set_rules('item[specification]',$this->lang->line('LABEL_SPECIFICATION'),'required');
-        $this->form_validation->set_rules('item[reason]',$this->lang->line('LABEL_REASON'),'required');
-        if($this->form_validation->run() == FALSE)
-        {
-            $this->message=validation_errors();
-            return false;
-        }
-        return true;
-    }
     public function get_parent_wise_task()
     {
-        $CI=& get_instance();
-        $CI->db->from($CI->config->item('table_ams_setup_categories'));
-        $CI->db->order_by('ordering');
-        $results=$CI->db->get()->result_array();
+        $this->db->from($this->config->item('table_ams_setup_categories'));
+        $this->db->order_by('ordering');
+        $results=$this->db->get()->result_array();
         $parents=array();
         foreach($results as $result)
         {
