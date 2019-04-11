@@ -478,6 +478,44 @@ class Purchase_requisition_payment extends Root_Controller
             $this->json_return($ajax);
         }
     }
+    private function system_edit_payment($id, $id1)
+    {
+        if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
+        {
+            if($id1>0)
+            {
+                $data['item']['id']=$id1;
+            }
+            else
+            {
+                $data['item']['id']=$this->input->post('id');
+            }
+            $data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('*'),array('id ='.$data['item']['id']),1,0,array('id ASC'));
+            if(!$data['item'])
+            {
+                System_helper::invalid_try('Edit Non Exists',$data['item']['id']);
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Notice Type.';
+                $this->json_return($ajax);
+            }
+            $data['item']['item_id']=$id;
+            $data['title']="Edit Payment";
+            $ajax['status']=true;
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_edit_payment",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/edit_payment/'.$data['item']['item_id'].'/'.$data['item']['id']);
+            $this->json_return($ajax);
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+    }
     private function system_save_payment()
     {
         $id = $this->input->post("id");
@@ -493,7 +531,7 @@ class Purchase_requisition_payment extends Root_Controller
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->json_return($ajax);
             }
-            $result=Query_helper::get_info($this->config->item('table_pos_setup_notice_types'),'*',array('id ='.$id),1);
+            $result=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),'*',array('id ='.$id),1);
             if(!$result)
             {
                 System_helper::invalid_try('Update Non Exists',$id);
