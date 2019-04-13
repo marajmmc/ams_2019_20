@@ -59,7 +59,7 @@ class Purchase_requisition_payment extends Root_Controller
         }
         elseif($action=="get_items_payment")
         {
-            $this->system_get_items_payment();
+            $this->system_get_items_payment($id);
         }
         elseif($action=="add_payment")
         {
@@ -421,8 +421,16 @@ class Purchase_requisition_payment extends Root_Controller
                 $ajax['system_message']='Purchase Order Payment Not Approved.';
                 $this->json_return($ajax);
             }
+            $data['info_basic']=Ams_helper::get_basic_info($result);
+            $data['amount_total']=$result['amount_price_total'];
+            $data['model_number']=$result['model_number'];
+
+            $result=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('SUM(amount) amount_total_paid'),array('purchase_order_id ='.$data['item_id'],'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+            $data['amount_total_paid']=$result['amount_total_paid']?$result['amount_total_paid']:0;
+            $data['amount_total_due']=($data['amount_total']-$result['amount_total_paid']);
+
             $data['system_preference_items']= System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method));
-            $data['title']="Purchase Order ID: (".$data['item_id'].") Payment List :: Model/Serial/ID: ".$result['model_number'];
+            $data['title']="Purchase Order ID: (".$data['item_id'].") Payment List :: Model/Serial/ID: ".$data['model_number'];
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/list_payment",$data,true));
             if($this->message)
@@ -439,9 +447,10 @@ class Purchase_requisition_payment extends Root_Controller
             $this->json_return($ajax);
         }
     }
-    private function system_get_items_payment()
+    private function system_get_items_payment($item_id)
     {
         $this->db->from($this->config->item('table_ams_requisition_payment').' item');
+        $this->db->where('item.purchase_order_id',$item_id);
         $this->db->order_by('item.id','DESC');
         $items=$this->db->get()->result_array();
         foreach($items as &$item)
@@ -461,6 +470,28 @@ class Purchase_requisition_payment extends Root_Controller
             $data['item']['payment_advance']=0;
             $data['item']['amount']='';
             $data['item']['remarks']='';
+
+            $result=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$id,'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+            if(!$result)
+            {
+                System_helper::invalid_try('Payment List Non Exists',$id);
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Purchase Order.';
+                $this->json_return($ajax);
+            }
+            if($result['status_payment_approve']==$this->config->item('system_status_pending'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Purchase Order Payment Not Approved.';
+                $this->json_return($ajax);
+            }
+            $data['info_basic']=Ams_helper::get_basic_info($result);
+            $data['amount_total']=$result['amount_price_total'];
+            $data['model_number']=$result['model_number'];
+
+            $result=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('SUM(amount) amount_total_paid'),array('purchase_order_id ='.$id,'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+            $data['amount_total_paid']=$result['amount_total_paid']?$result['amount_total_paid']:0;
+            $data['amount_total_due']=($data['amount_total']-$result['amount_total_paid']);
 
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_edit_payment",$data,true));
@@ -499,6 +530,29 @@ class Purchase_requisition_payment extends Root_Controller
                 $this->json_return($ajax);
             }
             $data['item']['item_id']=$id;
+
+            $result=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$data['item']['item_id'],'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+            $data['info_basic']=Ams_helper::get_basic_info($result);
+            if(!$result)
+            {
+                System_helper::invalid_try('Payment List Non Exists',$data['item']['item_id']);
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Purchase Order.';
+                $this->json_return($ajax);
+            }
+            if($result['status_payment_approve']==$this->config->item('system_status_pending'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Purchase Order Payment Not Approved.';
+                $this->json_return($ajax);
+            }
+            $data['amount_total']=$result['amount_price_total'];
+            $data['model_number']=$result['model_number'];
+
+            $result=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('SUM(amount) amount_total_paid'),array('purchase_order_id ='.$data['item']['item_id'],'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+            $data['amount_total_paid']=$result['amount_total_paid']?$result['amount_total_paid']:0;
+            $data['amount_total_due']=($data['amount_total']-$result['amount_total_paid']);
+
             $data['title']="Edit Payment";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_edit_payment",$data,true));
@@ -523,6 +577,7 @@ class Purchase_requisition_payment extends Root_Controller
         $user = User_helper::get_user();
         $time=time();
         $item=$this->input->post('item');
+        $result_amount=0;
         if($id>0)
         {
             if(!(isset($this->permissions['action2']) && ($this->permissions['action2']==1)))
@@ -539,6 +594,7 @@ class Purchase_requisition_payment extends Root_Controller
                 $ajax['system_message']='Invalid Notice Type.';
                 $this->json_return($ajax);
             }
+            $result_amount=isset($result['amount'])?$result['amount']:0;
         }
         else
         {
@@ -556,6 +612,37 @@ class Purchase_requisition_payment extends Root_Controller
             $this->json_return($ajax);
         }
 
+        $result=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id,'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+        if(!$result)
+        {
+            System_helper::invalid_try('Payment Update Non Exists',$id);
+            $ajax['status']=false;
+            $ajax['system_message']='Invalid Purchase Order.';
+            $this->json_return($ajax);
+        }
+        if($result['status_payment_approve']==$this->config->item('system_status_pending'))
+        {
+            $ajax['status']=false;
+            $ajax['system_message']='Purchase Order Payment Not Approved.';
+            $this->json_return($ajax);
+        }
+        $amount_price_total=$result['amount_price_total'];
+
+        $result=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('SUM(amount) amount_total_paid'),array('purchase_order_id ='.$item_id,'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+        $amount_total_paid=$result['amount_total_paid']?$result['amount_total_paid']:0;
+
+        if($item['amount'])
+        {
+            $amount_previous=$amount_total_paid-$result_amount;
+            $current_paid_amount=$amount_previous+$item['amount'];
+            if($amount_price_total<$current_paid_amount)
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Purchase total amount is: '.$amount_price_total.' & your paid amount is: '.$current_paid_amount;
+                $this->json_return($ajax);
+            }
+        }
+
         $this->db->trans_start();  //DB Transaction Handle START
 
         if($id>0)
@@ -569,9 +656,10 @@ class Purchase_requisition_payment extends Root_Controller
         }
         else
         {
+            $item['purchase_order_id'] = $item_id;
+            $item['date_payment'] = System_helper::get_time($item['date_payment']);
             $item['date_created']=$time;
             $item['user_created']=$user->user_id;
-            $item['date_payment'] = System_helper::get_time($item['date_payment']);
             $item['revision_count']=1;
             Query_helper::add($this->config->item('table_ams_requisition_payment'),$item, false);
         }

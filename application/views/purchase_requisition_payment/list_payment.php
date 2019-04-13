@@ -66,22 +66,34 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         <div class="clearfix"></div>
     </div>
     <?php
+    echo $CI->load->view("info_basic", $data=array(), true);
+    ?>
+    <?php
     if(isset($CI->permissions['action6']) && ($CI->permissions['action6']==1))
     {
         $CI->load->view('preference',array('system_preference_items'=>$system_preference_items));
     }
     ?>
+    <div class="row">
+        <div class="col-xs-3">
+            <button type="button" class="btn btn-success btn-xs">Total Amount: <?php echo System_helper::get_string_amount($amount_total);?></button>
+            <button type="button" class="btn btn-warning btn-xs">Paid Amount: <?php echo System_helper::get_string_amount($amount_total_paid);?></button>
+            <button type="button" class="btn btn-danger btn-xs">Due: <?php echo System_helper::get_string_amount($amount_total_due);?></button>
+        </div>
+    </div>
+
     <div class="col-xs-12" id="system_jqx_container">
 
     </div>
 </div>
+
 <div class="clearfix"></div>
 <script type="text/javascript">
     $(document).ready(function ()
     {
         system_off_events();
         system_preset({controller:'<?php echo $CI->router->class; ?>'});
-        var url = "<?php echo site_url($CI->controller_url.'/index/get_items_payment');?>";
+        var url = "<?php echo site_url($CI->controller_url.'/index/get_items_payment/'.$item_id);?>";
 
         // prepare the data
         var source =
@@ -107,6 +119,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 ?>
             ],
             id: 'id',
+            type: 'POST',
             url: url
         };
 
@@ -131,6 +144,30 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             return element[0].outerHTML;
 
         };
+        var aggregates=function (total, column, element, record)
+        {
+            if(record.amount=="Grand Total")
+            {
+                return record[element];
+
+            }
+            return total;
+        };
+        var aggregatesrenderer=function (aggregates)
+        {
+            //console.log('here');
+            return '<div style="position: relative; margin: 0px;padding: 5px;width: 100%;height: 100%; overflow: hidden;background-color:'+system_report_color_grand+';">' +aggregates['total']+'</div>';
+
+        };
+        var aggregatesrenderer_amount=function (aggregates)
+        {
+            var text='';
+            if(!((aggregates['sum']=='0.00')||(aggregates['sum']=='')))
+            {
+                text=get_string_amount(aggregates['sum']);
+            }
+            return '<div style="position: relative; margin: 0px;padding: 5px;width: 100%;height: 100%; overflow: hidden;background-color:'+system_report_color_grand+';">' +text+'</div>';
+        };
         // create jqxgrid.
         $("#system_jqx_container").jqxGrid(
             {
@@ -145,6 +182,8 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 pagesize:50,
                 pagesizeoptions: ['50', '100', '200','300','500','1000','5000'],
                 selectionmode: 'singlerow',
+                showaggregates: true,
+                showstatusbar: true,
                 altrows: true,
                /* rowsheight: 35,
                 columnsheight: 40,*/
@@ -155,7 +194,17 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     { text: '<?php echo $CI->lang->line('LABEL_ID'); ?>', dataField: 'id',width:'50',cellsAlign:'right',hidden: <?php echo $system_preference_items['id']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_DATE_PAYMENT'); ?>', dataField: 'date_payment',width:'100', hidden: <?php echo $system_preference_items['date_payment']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_PAYMENT_ADVANCE'); ?>', dataField: 'payment_advance',width:'50',filtertype: 'list',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['payment_advance']?0:1;?>},
-                    { text: '<?php echo $CI->lang->line('LABEL_AMOUNT'); ?>', dataField: 'amount',width:'120',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['amount']?0:1;?>},
+                    { text: '<?php echo $CI->lang->line('LABEL_AMOUNT'); ?>', dataField: 'amount',width:'120', hidden: <?php echo $system_preference_items['amount']?0:1;?>,cellsrenderer: cellsrenderer,aggregates: ['sum'],aggregatesrenderer:aggregatesrenderer_amount,
+                        initeditor: function (row, cellvalue, editor, celltext, pressedkey)
+                        {
+                            editor.wrap( '<div style="margin: 0px;width: 100%;height: 100%;padding: 5px;;line-height: 25px;">');
+                            editor.wrap( '<div class="jqxgrid_input">');
+                            editor.addClass('float_type_positive');
+                            editor.css('width','100%');
+                            editor.css('height','100%');
+                            editor.css('border-width','0');
+                        }
+                    },
                     { text: '<?php echo $CI->lang->line('LABEL_REMARKS'); ?>', dataField: 'remarks',width:'300', hidden: <?php echo $system_preference_items['remarks']?0:1;?>}
                 ]
             });

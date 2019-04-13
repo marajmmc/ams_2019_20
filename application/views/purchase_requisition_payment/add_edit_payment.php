@@ -38,6 +38,16 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
     <input type="hidden" id="id" name="id" value="<?php echo $item['id']?>" />
     <input type="hidden" id="system_save_new_status" name="system_save_new_status" value="0" />
     <div class="row widget">
+        <?php
+        echo $CI->load->view("info_basic", $data=array(), true);
+        ?>
+        <div class="row">
+            <div class="col-xs-3">
+                <button type="button" class="btn btn-success btn-xs">Total Amount: <?php echo System_helper::get_string_amount($amount_total);?></button>
+                <button type="button" class="btn btn-warning btn-xs">Paid Amount: <?php echo System_helper::get_string_amount($amount_total_paid);?></button>
+                <button type="button" class="btn btn-danger btn-xs">Due Amount: <?php echo System_helper::get_string_amount($amount_total_due);?></button>
+            </div>
+        </div>
         <div class="widget-header">
             <div class="title">
                 <?php echo $title; ?>
@@ -63,11 +73,13 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         </div>
         <div class="row show-grid">
             <div class="col-xs-4">
+                <br/>
                 <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_AMOUNT');?><span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
+                <strong class="pull-right bg-success">Total Amount: <span id="amount_total"><?php echo System_helper::get_string_amount($amount_total)?></span></strong>
                 <input type="text" name="item[amount]" id="amount" class="form-control float_type_positive " value="<?php echo $item['amount'];?>" oninput="calculate_total()" />
-                <!--<strong class="pull-right bg-success">Total Price: <span id="amount_price_total"><?php /*//echo System_helper::get_string_amount($item['amount_price_total'])*/?></span></strong>-->
+                <strong class="pull-right bg-success">Due Amount: <span id="amount_due"><?php echo System_helper::get_string_amount($amount_total_due)?></span></strong>
             </div>
         </div>
         <div class="row show-grid">
@@ -91,11 +103,11 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
 
     function calculate_total()
     {
-        /*$('#amount_price_total').html('0.00');
-        var quantity_total=parseInt($('#quantity_total').val());
-        var amount_price_unit=parseFloat($('#amount_price_unit').val());
-        var amount_price_total=get_string_amount(quantity_total*amount_price_unit);
-        $('#amount_price_total').html(amount_price_total);*/
+        $('#amount_due').html('0.00');
+        var amount_total=parseFloat(<?php echo $amount_total;?>);
+        var amount=parseFloat($('#amount').val());
+        var amount_due=get_string_amount(amount_total-amount);
+        $('#amount_due').html(amount_due);
     }
 </script>
 
