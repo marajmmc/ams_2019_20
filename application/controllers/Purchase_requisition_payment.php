@@ -105,6 +105,7 @@ class Purchase_requisition_payment extends Root_Controller
         {
             $data['id']= 1;
             $data['date_requisition']= 1;
+            $data['supplier_name']= 1;
             $data['category_name']= 1;
             $data['model_number']= 1;
             $data['quantity_total']= 1;
@@ -118,6 +119,7 @@ class Purchase_requisition_payment extends Root_Controller
         {
             $data['id']= 1;
             $data['date_requisition']= 1;
+            $data['supplier_name']= 1;
             $data['category_name']= 1;
             $data['model_number']= 1;
             $data['quantity_total']= 1;
@@ -193,6 +195,8 @@ class Purchase_requisition_payment extends Root_Controller
         $this->db->select('item.*, category.name category_name');
 
         $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+        $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+        $this->db->select('supplier.name supplier_name');
 
         $this->db->where('item.status',$this->config->item('system_status_active'));
         $this->db->where('item.status_approve',$this->config->item('system_status_approved'));
@@ -235,6 +239,8 @@ class Purchase_requisition_payment extends Root_Controller
         $this->db->select('item.*, category.name category_name');
 
         $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+        $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+        $this->db->select('supplier.name supplier_name');
 
         $this->db->where('item.status !=',$this->config->item('system_status_delete'));
         $this->db->where('item.status_approve',$this->config->item('system_status_approved'));
@@ -264,6 +270,8 @@ class Purchase_requisition_payment extends Root_Controller
             $this->db->select('item.*, category.name category_name');
 
             $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
 
             $this->db->where('item.status !=',$this->config->item('system_status_delete'));
             $this->db->where('item.id',$item_id);

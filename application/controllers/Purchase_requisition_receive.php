@@ -82,6 +82,7 @@ class Purchase_requisition_receive extends Root_Controller
         {
             $data['id']= 1;
             $data['date_requisition']= 1;
+            $data['supplier_name']= 1;
             $data['category_name']= 1;
             $data['model_number']= 1;
             $data['quantity_total']= 1;
@@ -96,6 +97,7 @@ class Purchase_requisition_receive extends Root_Controller
         {
             $data['id']= 1;
             $data['date_requisition']= 1;
+            $data['supplier_name']= 1;
             $data['category_name']= 1;
             $data['model_number']= 1;
             $data['quantity_total']= 1;
@@ -164,6 +166,8 @@ class Purchase_requisition_receive extends Root_Controller
         $this->db->select('item.*, category.name category_name');
 
         $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+        $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+        $this->db->select('supplier.name supplier_name');
 
         $this->db->where('item.status',$this->config->item('system_status_active'));
         $this->db->where('item.status_approve',$this->config->item('system_status_approved'));
@@ -206,6 +210,8 @@ class Purchase_requisition_receive extends Root_Controller
         $this->db->select('item.*, category.name category_name');
 
         $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+        $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+        $this->db->select('supplier.name supplier_name');
 
         $this->db->where('item.status !=',$this->config->item('system_status_delete'));
         $this->db->where('item.status_approve',$this->config->item('system_status_approved'));
@@ -230,15 +236,17 @@ class Purchase_requisition_receive extends Root_Controller
                 $item_id=$this->input->post('id');
             }
 
-            $data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id, 'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
-            /*$this->db->from($this->config->item('table_ams_requisition_request').' item');
+            //$data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id, 'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+            $this->db->from($this->config->item('table_ams_requisition_request').' item');
             $this->db->select('item.*, category.name category_name');
 
             $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
 
             $this->db->where('item.status !=',$this->config->item('system_status_delete'));
             $this->db->where('item.id',$item_id);
-            $data['item']=$this->db->get()->row_array();*/
+            $data['item']=$this->db->get()->row_array();
             if(!$data['item'])
             {
                 System_helper::invalid_try('Receive Non Exists',$item_id);

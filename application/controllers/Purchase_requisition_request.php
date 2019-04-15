@@ -94,6 +94,7 @@ class Purchase_requisition_request extends Root_Controller
         {
             $data['id']= 1;
             $data['date_requisition']= 1;
+            $data['supplier_name']= 1;
             $data['category_name']= 1;
             $data['model_number']= 1;
             $data['quantity_total']= 1;
@@ -108,6 +109,7 @@ class Purchase_requisition_request extends Root_Controller
         {
             $data['id']= 1;
             $data['date_requisition']= 1;
+            $data['supplier_name']= 1;
             $data['category_name']= 1;
             $data['model_number']= 1;
             $data['quantity_total']= 1;
@@ -177,6 +179,8 @@ class Purchase_requisition_request extends Root_Controller
         $this->db->select('item.*, category.name category_name');
 
         $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+        $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+        $this->db->select('supplier.name supplier_name');
 
         $this->db->where('item.status',$this->config->item('system_status_active'));
         $this->db->where('item.status_forward',$this->config->item('system_status_pending'));
@@ -218,6 +222,8 @@ class Purchase_requisition_request extends Root_Controller
         $this->db->select('item.*, category.name category_name');
 
         $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+        $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+        $this->db->select('supplier.name supplier_name');
 
         $this->db->where('item.status !=',$this->config->item('system_status_delete'));
         $this->db->order_by('item.id','DESC');
@@ -235,6 +241,7 @@ class Purchase_requisition_request extends Root_Controller
             $data['title']="Create New Requisition";
             $data['item']['id']=0;
             $data['item']['date_requisition']=time();
+            $data['item']['supplier_id']='';
             $data['item']['model_number']='';
             $data['item']['quantity_total']=1;
             $data['item']['amount_price_unit']='';
@@ -243,6 +250,7 @@ class Purchase_requisition_request extends Root_Controller
             $data['item']['reason']='';
             $data['item']['remarks']='';
             $data['categories']=$this->get_parent_wise_task();
+            $data['suppliers']=Query_helper::get_info($this->config->item('table_ams_setup_suppliers'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
 
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_edit",$data,true));
@@ -300,6 +308,7 @@ class Purchase_requisition_request extends Root_Controller
                 $this->json_return($ajax);
             }
             $data['categories']=$this->get_parent_wise_task();
+            $data['suppliers']=Query_helper::get_info($this->config->item('table_ams_setup_suppliers'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
 
             $data['title']="Edit Purchase Order :: ". $data['item']['id'];
             $ajax['status']=true;
@@ -454,6 +463,8 @@ class Purchase_requisition_request extends Root_Controller
             $this->db->select('item.*, category.name category_name');
 
             $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
 
             $this->db->where('item.status !=',$this->config->item('system_status_delete'));
             $this->db->where('item.id',$item_id);

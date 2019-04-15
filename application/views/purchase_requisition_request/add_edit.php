@@ -156,6 +156,24 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         </div>
         <div class="row show-grid">
             <div class="col-xs-4">
+                <label class="control-label pull-right">Supplier</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <select id="supplier_id" name="item[supplier_id]" class="form-control">
+                    <option value=""><?php echo $CI->lang->line('SELECT');?></option>
+                    <?php
+                    foreach($suppliers as $supplier)
+                    {
+                        ?>
+                        <option value="<?php echo $supplier['value']?>" <?php if($supplier['value']==$item['supplier_id']){echo "selected='selected'";}?>><?php echo $supplier['text']?></option>
+                    <?php
+                    }
+                    ?>
+                </select>
+            </div>
+        </div>
+        <div class="row show-grid">
+            <div class="col-xs-4">
                 <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_MODEL_NUMBER');?><span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
