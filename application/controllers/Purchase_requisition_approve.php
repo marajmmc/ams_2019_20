@@ -164,6 +164,7 @@ class Purchase_requisition_approve extends Root_Controller
     {
         $user = User_helper::get_user();
         $designation_child_ids = Ams_helper::get_child_ids_designation($user->designation);
+        $designation_child_ids[$user->designation]=$user->designation;
         $this->db->from($this->config->item('table_ams_requisition_request').' item');
         $this->db->select('item.*, category.name category_name');
 
