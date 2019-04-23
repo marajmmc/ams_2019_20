@@ -80,31 +80,9 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
                     <span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <select id="status" name="item[status]" class="form-control" tabindex="-1">
-                    <option value="<?php echo $CI->config->item('system_status_active'); ?>"
-                        <?php
-                        if ($item['status'] == $CI->config->item('system_status_active'))
-                        {
-                            echo ' selected';
-                        }
-                        ?> ><?php echo $CI->lang->line('ACTIVE') ?>
-                    </option>
-                    <option value="<?php echo $CI->config->item('system_status_inactive'); ?>"
-                        <?php
-                        if ($item['status'] == $CI->config->item('system_status_inactive'))
-                        {
-                            echo ' selected';
-                        }
-                        ?> ><?php echo $CI->lang->line('INACTIVE') ?>
-                    </option>
-                    <option value="<?php echo $CI->config->item('system_status_delete'); ?>"
-                        <?php
-                        if ($item['status'] == $CI->config->item('system_status_delete'))
-                        {
-                            echo ' selected';
-                        }
-                        ?> ><?php echo $CI->lang->line('DELETE') ?>
-                    </option>
+                <select id="status" name="item[status]" class="form-control">
+                    <option value="<?php echo $CI->config->item('system_status_active'); ?>" <?php echo ($item['status'] == $CI->config->item('system_status_active'))? 'selected':''; ?>><?php echo $CI->lang->line('ACTIVE') ?></option>
+                    <option value="<?php echo $CI->config->item('system_status_inactive'); ?>" <?php echo ($item['status'] == $CI->config->item('system_status_inactive'))? 'selected':''; ?>><?php echo $CI->lang->line('INACTIVE') ?></option>
                 </select>
             </div>
         </div>

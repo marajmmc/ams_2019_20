@@ -185,7 +185,8 @@ class Setup_category extends Root_Controller
                     'id' => $result['id'],
                     'name' => $result['name'],
                     'ordering' => $result['ordering'],
-                    'parent' => ($result['parent'] > 0) ? $result['parent'] : ""
+                    'parent' => ($result['parent'] > 0) ? $result['parent'] : "",
+                    'status' => ($result['status'] == $this->config->item('system_status_inactive')) ? "<br/><span>({$result['status']})<span>" : ""
                 );
             }
 
@@ -220,7 +221,7 @@ class Setup_category extends Root_Controller
                 'status' => $this->config->item('system_status_active')
             );
 
-            $data['categories'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
+            $data['categories'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_inactive') . '"'));
 
             $data['title'] = "Create New Category";
             $ajax['status'] = true;
@@ -253,7 +254,7 @@ class Setup_category extends Root_Controller
                 $item_id = $this->input->post('id');
             }
             $data = array();
-            $data['item'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array('id =' . $item_id, 'status !="' . $this->config->item('system_status_delete') . '"'), 1, 0, array('id ASC'));
+            $data['item'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), array('*'), array('id =' . $item_id), 1, 0, array('id ASC'));
             if (!$data['item'])
             {
                 System_helper::invalid_try(__FUNCTION__, $item_id, 'Edit Not Exists');
@@ -261,7 +262,10 @@ class Setup_category extends Root_Controller
                 $ajax['system_message'] = 'Invalid Try.';
                 $this->json_return($ajax);
             }
-            $data['categories'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*', array('status != "' . $this->config->item('system_status_delete') . '"'));
+
+
+            $extra_select = ", (CASE status WHEN '{$this->config->item('system_status_inactive')}' THEN CONCAT(name, ' ( {$this->config->item('system_status_inactive')} )') ELSE name END) as name";
+            $data['categories'] = Query_helper::get_info($this->config->item('table_ams_setup_categories'), '*' . $extra_select, array('id !=' . $item_id));
 
             $data['title'] = "Edit Category :: " . $data['item']['name'];
             $ajax['status'] = true;
@@ -329,6 +333,7 @@ class Setup_category extends Root_Controller
         {
             $item['date_updated'] = $time;
             $item['user_updated'] = $user->user_id;
+            $this->db->set('revision_count', 'revision_count+1', FALSE);
             Query_helper::update($this->config->item('table_ams_setup_categories'), $item, array('id=' . $id));
         }
         else // ADD

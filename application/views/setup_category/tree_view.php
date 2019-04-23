@@ -18,6 +18,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
     .google-visualization-orgchart-nodesel {
         border:none !important;
     }
+    .google-visualization-orgchart-node span{color:#FF0000;white-space:nowrap}
     /*td.google-visualization-orgchart-node{white-space:nowrap}*/
 </style>
 
@@ -32,15 +33,24 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
     <div class="row show-grid row-container">
         <div class="col-lg-12">
             <div class="col-xs-12" style="overflow-x:scroll">
-                <div id="chart_div"></div>
+                <div id="chart_div" style="text-align:center">
+
+                    <img style="display:inline-block; margin:100px 0" src="<?php echo str_replace($CI->config->item('system_site_root_folder'), 'login_2018_19', base_url('images/spinner.gif')); ?>">
+
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
-    $.getScript("https://www.gstatic.com/charts/loader.js", function () {
-        initiate_organogram();
+    jQuery(document).ready(function ($) {
+        system_off_events();
+        system_preset({controller: '<?php echo $CI->router->class; ?>'});
+
+        $.getScript("https://www.gstatic.com/charts/loader.js", function(){
+            initiate_organogram();
+        });
     });
 
     function initiate_organogram() {
@@ -56,7 +66,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
         <?php if($categories){ ?>
             data.addRows([
                 <?php foreach($categories as $category){
-                    echo "[ {v:'{$category['id']}', f:'{$category['name']}'}, '{$category['parent']}', 'ID: {$category['id']}, Order: {$category['ordering']}'],";
+                    echo "[ {v:'{$category['id']}', f:'{$category['name']}{$category['status']}'}, '{$category['parent']}', 'ID: {$category['id']}, Order: {$category['ordering']}'],";
                 } ?>
             ]);
         <?php } ?>
