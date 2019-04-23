@@ -22,7 +22,6 @@ class Purchase_requisition_request extends Root_Controller
     {
         $this->lang->language['LABEL_DATE_REQUISITION']='Date';
         $this->lang->language['LABEL_CATEGORY_NAME']='Category';
-        $this->lang->language['LABEL_MODEL_NUMBER']='Model/Serial/ID';
         $this->lang->language['LABEL_AMOUNT_PRICE_UNIT']='Unit Price';
         $this->lang->language['LABEL_AMOUNT_PRICE_TOTAL']='Total Price';
         $this->lang->language['LABEL_REASON']='Reason';
@@ -96,7 +95,6 @@ class Purchase_requisition_request extends Root_Controller
             $data['date_requisition']= 1;
             $data['supplier_name']= 1;
             $data['category_name']= 1;
-            $data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -111,7 +109,6 @@ class Purchase_requisition_request extends Root_Controller
             $data['date_requisition']= 1;
             $data['supplier_name']= 1;
             $data['category_name']= 1;
-            $data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -238,11 +235,11 @@ class Purchase_requisition_request extends Root_Controller
     {
         if(isset($this->permissions['action1'])&&($this->permissions['action1']==1))
         {
+            $user=User_helper::get_user();
             $data['title']="Create New Requisition";
             $data['item']['id']=0;
             $data['item']['date_requisition']=time();
             $data['item']['supplier_id']='';
-            $data['item']['model_number']='';
             $data['item']['quantity_total']=1;
             $data['item']['amount_price_unit']='';
             $data['item']['amount_price_total']=0;
@@ -251,6 +248,13 @@ class Purchase_requisition_request extends Root_Controller
             $data['item']['remarks']='';
             $data['categories']=$this->get_parent_wise_task();
             $data['suppliers']=Query_helper::get_info($this->config->item('table_ams_setup_suppliers'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
+            $data['responsible_user_groups']=Query_helper::get_info($this->config->item('table_ams_setup_responsible_user_group'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"', "user_ids like '%,$user->user_id,%'"),0,0,array('ordering ASC'));
+            if(!(sizeof($data['responsible_user_groups'])>0))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='You are not assign to responsible user group.';
+                $this->json_return($ajax);
+            }
 
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_edit",$data,true));
@@ -568,7 +572,6 @@ class Purchase_requisition_request extends Root_Controller
     private function check_validation()
     {
         $this->load->library('form_validation');
-        $this->form_validation->set_rules('item[model_number]',$this->lang->line('LABEL_MODEL_NUMBER'),'required');
         $this->form_validation->set_rules('item[quantity_total]',$this->lang->line('LABEL_QUANTITY_TOTAL'),'required');
         $this->form_validation->set_rules('item[amount_price_unit]',$this->lang->line('LABEL_AMOUNT_PRICE_UNIT'),'required');
         $this->form_validation->set_rules('item[specification]',$this->lang->line('LABEL_SPECIFICATION'),'required');

@@ -66,10 +66,6 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <td><?php echo $item['supplier_name'];?></td>
             </tr>
             <tr>
-                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_MODEL_NUMBER');?></label></td>
-                <td><?php echo $item['model_number'];?></td>
-            </tr>
-            <tr>
                 <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_QUANTITY_TOTAL');?></label></td>
                 <td><?php echo System_helper::get_string_quantity($item['quantity_total']);?></td>
             </tr>

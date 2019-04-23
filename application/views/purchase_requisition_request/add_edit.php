@@ -42,6 +42,39 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             </div>
             <div class="clearfix"></div>
         </div>
+        <div class="row show-grid" >
+            <div class="col-xs-4">
+                <label class="control-label pull-right">Responsible User Group</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <?php
+                if(sizeof($responsible_user_groups)==1)
+                {
+                    ?>
+                    <label class="control-label"><?php echo $responsible_user_groups[0]['text']?></label>
+                    <input type="hidden" name="responsible_user_group_id" id="responsible_user_group_id" value="<?php echo $responsible_user_groups[0]['value']?>" />
+                <?php
+                }
+                else
+                {
+                    ?>
+                    <select id="responsible_user_group_id" name="responsible_user_group_id" class="form-control">
+                        <option value=""><?php echo $CI->lang->line('SELECT');?></option>
+                        <?php
+                        foreach($responsible_user_groups as $user_group)
+                        {
+                            ?>
+                            <option value="<?php echo $user_group['value'];?>"><?php echo $user_group['text'];?></option>
+                        <?php
+                        }
+                        ?>
+                    </select>
+                <?php
+                }
+                ?>
+
+            </div>
+        </div>
         <?php
         if($item['id']>0)
         {
@@ -170,14 +203,6 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     }
                     ?>
                 </select>
-            </div>
-        </div>
-        <div class="row show-grid">
-            <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_MODEL_NUMBER');?><span style="color:#FF0000">*</span></label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[model_number]" id="model_number" class="form-control " value="<?php echo $item['model_number'];?>" />
             </div>
         </div>
         <div class="row show-grid">

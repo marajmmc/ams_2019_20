@@ -41,7 +41,10 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     <thead>
                     <tr>
                         <th style="width: 10px;">SL#</th>
-                        <th style="width: 10px;">All</th>
+                        <th style="width: 10px;">
+                            <input type="checkbox" class="allSelectCheckbox" name="" >
+                            All
+                        </th>
                         <th>Employee Name</th>
                     </tr>
                     </thead>
@@ -55,9 +58,9 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     <tr>
                         <td><?php echo $serial_no?></td>
                         <td>
-                            <input type="checkbox" id="" name="" class="" />
+                            <input type="checkbox" id="user_id_<?php echo $user['id']?>" name="items[]" class="" value="<?php echo $user['id']?>" <?php if(in_array($user['id'],$user_ids)){echo "checked='true'";}?> />
                         </td>
-                        <td><?php echo $user['name']?></td>
+                        <td><label for="user_id_<?php echo $user['id']?>" style="cursor: pointer"><?php echo $user['name']?></label></td>
                     </tr>
                     <?php
                     }
@@ -74,6 +77,19 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
     {
         system_off_events();
         system_preset({controller:'<?php echo $CI->router->class; ?>'});
+
+        $(document).on("click",'.allSelectCheckbox',function()
+        {
+            if($(this).is(':checked'))
+            {
+                $('input:checkbox').prop('checked', true);
+            }
+            else
+            {
+                $('input:checkbox').prop('checked', false);
+            }
+        });
+
     });
 </script>
 

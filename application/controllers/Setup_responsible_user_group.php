@@ -293,6 +293,7 @@ class Setup_responsible_user_group extends Root_Controller
                 $ajax['system_message']='Invalid Responsible User Group.';
                 $this->json_return($ajax);
             }
+            $data['user_ids']=explode(',',trim($data['item']['user_ids'],','));
 
             $this->db->from($this->config->item('table_login_setup_user').' user');
             $this->db->select('user.id,user.employee_id,user.user_name,user.status');
@@ -317,6 +318,76 @@ class Setup_responsible_user_group extends Root_Controller
         {
             $ajax['status']=false;
             $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+    }
+    private function system_save_user_assign()
+    {
+        $id = $this->input->post("id");
+        $user = User_helper::get_user();
+        $time=time();
+        $items=$this->input->post('items');
+        if($id>0)
+        {
+            if(!(isset($this->permissions['action2']) && ($this->permissions['action2']==1)))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+                $this->json_return($ajax);
+            }
+            $result=Query_helper::get_info($this->config->item('table_ams_setup_responsible_user_group'),'*',array('id ='.$id),1);
+            if(!$result)
+            {
+                System_helper::invalid_try('Update Non Exists',$id);
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Responsible User Group.';
+                $this->json_return($ajax);
+            }
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+        $data=array();
+        if(sizeof($items)>0)
+        {
+            $data['user_ids']=','.implode(',',$items).',';
+        }
+        else
+        {
+            $data['user_ids']='';
+        }
+
+        $this->db->trans_start();  //DB Transaction Handle START
+
+        if($id>0)
+        {
+            //$data=array();
+            $data['date_updated_assign_group'] = $time;
+            $data['user_updated_assign_group'] = $user->user_id;
+            $this->db->set('revision_count_assign_group', 'revision_count_assign_group+1', FALSE);
+            Query_helper::update($this->config->item('table_ams_setup_responsible_user_group'),$data, array('id='.$id), false);
+        }
+        /*else
+        {
+            $item['date_created']=$time;
+            $item['user_created']=$user->user_id;
+            $item['revision_count_assign_group']=1;
+            Query_helper::add($this->config->item('table_ams_setup_responsible_user_group'),$item, false);
+        }*/
+
+        $this->db->trans_complete();   //DB Transaction Handle END
+        if ($this->db->trans_status() === TRUE)
+        {
+            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+            $this->system_list();
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
             $this->json_return($ajax);
         }
     }

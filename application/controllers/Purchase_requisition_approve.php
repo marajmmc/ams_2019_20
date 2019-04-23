@@ -23,7 +23,7 @@ class Purchase_requisition_approve extends Root_Controller
         $this->lang->language['LABEL_DATE_REQUISITION']='Date';
         $this->lang->language['LABEL_CATEGORY_NAME']='Category';
         $this->lang->language['LABEL_USER_NAME']='Employee Name';
-        $this->lang->language['LABEL_MODEL_NUMBER']='Model/Serial/ID';
+        $this->lang->language['LABEL_MODEL_NUMBER']='Asset Name';
         $this->lang->language['LABEL_AMOUNT_PRICE_UNIT']='Unit Price';
         $this->lang->language['LABEL_AMOUNT_PRICE_TOTAL']='Total Price';
         $this->lang->language['LABEL_REASON']='Reason';

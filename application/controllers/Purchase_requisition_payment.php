@@ -22,7 +22,7 @@ class Purchase_requisition_payment extends Root_Controller
     {
         $this->lang->language['LABEL_DATE_REQUISITION']='Date';
         $this->lang->language['LABEL_CATEGORY_NAME']='Category';
-        $this->lang->language['LABEL_MODEL_NUMBER']='Model/Serial/ID';
+        $this->lang->language['LABEL_MODEL_NUMBER']='Asset Name';
         $this->lang->language['LABEL_AMOUNT_PRICE_UNIT']='Unit Price';
         $this->lang->language['LABEL_AMOUNT_PRICE_TOTAL']='Total Price';
         $this->lang->language['LABEL_REASON']='Reason';
@@ -423,10 +423,10 @@ class Purchase_requisition_payment extends Root_Controller
                 $ajax['system_message']='Invalid Purchase Order.';
                 $this->json_return($ajax);
             }
-            if($result['status_payment_approve']==$this->config->item('system_status_pending'))
+            if($result['status_payment_approve']==$this->config->item('system_status_approved'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Purchase Order Payment Not Approved.';
+                $ajax['system_message']='Purchase Order Payment Completed.';
                 $this->json_return($ajax);
             }
             $data['info_basic']=Ams_helper::get_basic_info($result);
@@ -487,10 +487,10 @@ class Purchase_requisition_payment extends Root_Controller
                 $ajax['system_message']='Invalid Purchase Order.';
                 $this->json_return($ajax);
             }
-            if($result['status_payment_approve']==$this->config->item('system_status_pending'))
+            if($result['status_payment_approve']==$this->config->item('system_status_approved'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Purchase Order Payment Not Approved.';
+                $ajax['system_message']='Purchase Order Payment Approved.';
                 $this->json_return($ajax);
             }
             $data['info_basic']=Ams_helper::get_basic_info($result);
@@ -548,10 +548,10 @@ class Purchase_requisition_payment extends Root_Controller
                 $ajax['system_message']='Invalid Purchase Order.';
                 $this->json_return($ajax);
             }
-            if($result['status_payment_approve']==$this->config->item('system_status_pending'))
+            if($result['status_payment_approve']==$this->config->item('system_status_approved'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Purchase Order Payment Not Approved.';
+                $ajax['system_message']='Purchase Order Payment  Approved.';
                 $this->json_return($ajax);
             }
             $data['amount_total']=$result['amount_price_total'];
@@ -628,10 +628,10 @@ class Purchase_requisition_payment extends Root_Controller
             $ajax['system_message']='Invalid Purchase Order.';
             $this->json_return($ajax);
         }
-        if($result['status_payment_approve']==$this->config->item('system_status_pending'))
+        if($result['status_payment_approve']==$this->config->item('system_status_approved'))
         {
             $ajax['status']=false;
-            $ajax['system_message']='Purchase Order Payment Not Approved.';
+            $ajax['system_message']='Purchase Order Payment Approved.';
             $this->json_return($ajax);
         }
         $amount_price_total=$result['amount_price_total'];

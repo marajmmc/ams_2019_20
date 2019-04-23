@@ -33,6 +33,15 @@ class User_helper
         {
             $this->user_group=$result['user_group'];
         }
+        //$user->responsible_user_group[0]=0;
+        $CI->db->from($CI->config->item('table_ams_setup_responsible_user_group').' responsible_user');
+        $CI->db->where('responsible_user.status',$CI->config->item('system_status_active'));
+        $CI->db->like('user_ids', $id);
+        $results=$CI->db->get()->result_array();
+        foreach($results as $result)
+        {
+            $this->responsible_user_group[]=$result['id'];
+        }
     }
     public static function login($username, $password)
     {
