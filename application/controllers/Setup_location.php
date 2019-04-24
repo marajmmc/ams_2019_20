@@ -25,10 +25,6 @@ class Setup_location extends Root_Controller
         {
             $this->system_get_items();
         }
-        elseif ($action == "tree_view")
-        {
-            $this->system_tree_view();
-        }
         elseif ($action == "add")
         {
             $this->system_add();
@@ -40,6 +36,10 @@ class Setup_location extends Root_Controller
         elseif ($action == "save")
         {
             $this->system_save();
+        }
+        elseif ($action == "tree_view")
+        {
+            $this->system_tree_view();
         }
         elseif ($action == "set_preference_list")
         {
@@ -145,67 +145,31 @@ class Setup_location extends Root_Controller
         $items = array();
 
         $location = Category_helper::get_location_parent_children();
-        foreach ($location['parents'] as $location_id => $parent_ids) // $parent_ids[$i]
+        foreach ($location['parents'] as $location_id => $parent_ids)
         {
             $length_actual = sizeof($parent_ids);
             $length = ($length_actual - 2);
             $index = 1;
 
-            $arr = array(
+            $item = array(
                 'id' => $location['location'][$location_id]['id'],
                 'ordering' => $location['location'][$location_id]['ordering'],
                 'status' => $location['location'][$location_id]['status']
             );
             for ($i = $length; $i >= 0; $i--)
             {
-                $arr['location_' . ($index++)] = $location['location'][$parent_ids[$i]]['name'];
+                $item['location_' . ($index++)] = $location['location'][$parent_ids[$i]]['name'];
             }
-            $arr['location_' . ($index++)] = $location['location'][$location_id]['name'];
+            $item['location_' . ($index++)] = $location['location'][$location_id]['name'];
 
             while ($index <= $max_parent_length)
             {
-                $arr['location_' . ($index++)] = "";
+                $item['location_' . ($index++)] = "";
             }
 
-            $items[] = $arr;
+            $items[] = $item;
         }
         $this->json_return($items);
-    }
-
-    private function system_tree_view()
-    {
-        if (isset($this->permissions['action1']) && ($this->permissions['action1'] == 1))
-        {
-            $results = Query_helper::get_info($this->config->item('table_ams_setup_locations'), array('*'), array(), 0, 0, array('parent ASC', 'ordering ASC'));
-            $data = array();
-            $data['locations'] = array();
-            foreach ($results as $result)
-            {
-                $data['locations'][] = array(
-                    'id' => $result['id'],
-                    'name' => $result['name'],
-                    'ordering' => $result['ordering'],
-                    'parent' => ($result['parent'] > 0) ? $result['parent'] : "",
-                    'status' => ($result['status'] == $this->config->item('system_status_inactive')) ? "<br/><span>({$result['status']})<span>" : ""
-                );
-            }
-
-            $data['title'] = "Location Tree View";
-            $ajax['status'] = true;
-            $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/tree_view", $data, true));
-            if ($this->message)
-            {
-                $ajax['system_message'] = $this->message;
-            }
-            $ajax['system_page_url'] = site_url($this->controller_url . "/index/tree_view");
-            $this->json_return($ajax);
-        }
-        else
-        {
-            $ajax['status'] = false;
-            $ajax['system_message'] = $this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->json_return($ajax);
-        }
     }
 
     private function system_add()
@@ -221,8 +185,7 @@ class Setup_location extends Root_Controller
                 'status' => $this->config->item('system_status_active')
             );
 
-            $data['locations'] = Query_helper::get_info($this->config->item('table_ams_setup_locations'), '*', array('status != "' . $this->config->item('system_status_inactive') . '"'));
-
+            $data['locations'] = $this->get_location_tree_list();
             $data['title'] = "Create New Location";
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/add_edit", $data, true));
@@ -263,9 +226,7 @@ class Setup_location extends Root_Controller
                 $this->json_return($ajax);
             }
 
-            $extra_select = ", (CASE status WHEN '{$this->config->item('system_status_inactive')}' THEN CONCAT(name, ' ( {$this->config->item('system_status_inactive')} )') ELSE name END) as name";
-            $data['locations'] = Query_helper::get_info($this->config->item('table_ams_setup_locations'), '*' . $extra_select, array('id !=' . $item_id));
-
+            $data['locations'] = $this->get_location_tree_list('edit');
             $data['title'] = "Edit Location :: " . $data['item']['name'];
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/add_edit", $data, true));
@@ -301,7 +262,7 @@ class Setup_location extends Root_Controller
                 $this->json_return($ajax);
             }
 
-            $result = Query_helper::get_info($this->config->item('table_ams_setup_locations'), '*', array('id =' . $id, 'status != "' . $this->config->item('system_status_delete') . '"'), 1);
+            $result = Query_helper::get_info($this->config->item('table_ams_setup_locations'), '*', array('id =' . $id), 1);
             if (!$result)
             {
                 System_helper::invalid_try(__FUNCTION__, $id, 'Update Not Exists');
@@ -337,6 +298,7 @@ class Setup_location extends Root_Controller
         }
         else // ADD
         {
+            $item['revision_count'] = 1;
             $item['date_created'] = $time;
             $item['user_created'] = $user->user_id;
             Query_helper::add($this->config->item('table_ams_setup_locations'), $item);
@@ -364,6 +326,42 @@ class Setup_location extends Root_Controller
         }
     }
 
+    private function system_tree_view()
+    {
+        if (isset($this->permissions['action0']) && ($this->permissions['action0'] == 1))
+        {
+            $results = Query_helper::get_info($this->config->item('table_ams_setup_locations'), array('*'), array(), 0, 0, array('parent ASC', 'ordering ASC'));
+            $data = array();
+            $data['locations'] = array();
+            foreach ($results as $result)
+            {
+                $data['locations'][] = array(
+                    'id' => $result['id'],
+                    'name' => $result['name'],
+                    'ordering' => $result['ordering'],
+                    'parent' => ($result['parent'] > 0) ? $result['parent'] : '',
+                    'status' => ($result['status'] == $this->config->item('system_status_inactive')) ? '<br/><span>(' . $result['status'] . ')<span>' : ''
+                );
+            }
+
+            $data['title'] = "Location Tree View";
+            $ajax['status'] = true;
+            $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/tree_view", $data, true));
+            if ($this->message)
+            {
+                $ajax['system_message'] = $this->message;
+            }
+            $ajax['system_page_url'] = site_url($this->controller_url . "/index/tree_view");
+            $this->json_return($ajax);
+        }
+        else
+        {
+            $ajax['status'] = false;
+            $ajax['system_message'] = $this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+    }
+
     private function check_validation()
     {
         $this->load->library('form_validation');
@@ -376,5 +374,41 @@ class Setup_location extends Root_Controller
             return false;
         }
         return true;
+    }
+
+    private function get_location_tree_list($mode = '') //Sub locations list
+    {
+        if ($mode != 'edit')
+        {
+            $this->db->where('status', $this->config->item('system_status_active'));
+        }
+        $this->db->order_by('ordering');
+        $results = $this->db->get($this->config->item('table_ams_setup_locations'))->result_array();
+
+        $children = array();
+        foreach ($results as $result)
+        {
+            $children[$result['parent']]['ids'][$result['id']] = $result['id'];
+            $children[$result['parent']]['modules'][$result['id']] = $result;
+        }
+        $level0 = $children[0]['modules'];
+        $tree = array();
+        foreach ($level0 as $module)
+        {
+            Task_helper::get_sub_modules_tasks_tree($module, '', $tree, $children);
+        }
+
+        $tree_list = array();
+        foreach ($tree as $key => $row)
+        {
+            $tree_list[$key] = $row['module_task'];
+            $tree_list[$key]['prefix'] = $row['prefix'];
+            if ($row['module_task']['status'] == $this->config->item('system_status_inactive'))
+            {
+                $tree_list[$key]['name'] .= ' (' . $this->config->item('system_status_inactive') . ')';
+            }
+        }
+
+        return $tree_list;
     }
 }

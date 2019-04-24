@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $CI =& get_instance();
+
 $action_buttons = array();
 if (isset($CI->permissions['action0']) && ($CI->permissions['action0'] == 1))
 {
@@ -81,7 +82,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
             dataFields: [
                 <?php
                 foreach($system_preference_items as $key => $value){
-                    if($key=='id')
+                    if($key=='id' || $key=='ordering')
                     {
                     ?> { name: '<?php echo $key; ?>', type: 'number' }, <?php
                     }
@@ -95,7 +96,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
             id: 'id',
             type: 'POST',
             url: url,
-            data: {max_parent_length: <?php echo $max_parent_length; ?> } // id sent to `get_reporting_items()`
+            data: {max_parent_length: <?php echo $max_parent_length; ?> } // to determine number of Dynamic columns
         };
         var dataAdapter = new $.jqx.dataAdapter(source);
         // create jqxgrid.

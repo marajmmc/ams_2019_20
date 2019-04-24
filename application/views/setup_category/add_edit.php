@@ -40,8 +40,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
 
         <div class="row show-grid">
             <div class="col-xs-4">
-                <label for="name" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_NAME'); ?>
-                    <span style="color:#FF0000">*</span></label>
+                <label for="name" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_NAME'); ?> <span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
                 <input type="text" name="item[name]" id="name" class="form-control" value="<?php echo $item['name']; ?>"/>
@@ -58,7 +57,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
                     foreach ($categories as $key => $category)
                     {
                         ?>
-                        <option value="<?php echo $category['id']; ?>" <?php echo ($category['id'] == $item['parent'])? 'selected':''; ?>><?php echo $category['name']; ?></option>
+                        <option value="<?php echo $category['id']; ?>" <?php echo ($category['id'] == $item['parent'])? 'selected':''; ?>><?php echo $category['prefix'].$category['name']; ?></option>
                     <?php
                     }
                     ?>
@@ -67,8 +66,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
         </div>
         <div style="" class="row show-grid">
             <div class="col-xs-4">
-                <label for="ordering" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_ORDER'); ?>
-                    <span style="color:#FF0000">*</span></label>
+                <label for="ordering" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_ORDER'); ?> <span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
                 <input type="text" name="item[ordering]" id="ordering" class="form-control" value="<?php echo $item['ordering'] ?>">
@@ -76,8 +74,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
         </div>
         <div style="" class="row show-grid">
             <div class="col-xs-4">
-                <label for="status" class="control-label pull-right"><?php echo $CI->lang->line('STATUS'); ?>
-                    <span style="color:#FF0000">*</span></label>
+                <label for="status" class="control-label pull-right"><?php echo $CI->lang->line('STATUS'); ?> <span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
                 <select id="status" name="item[status]" class="form-control">
