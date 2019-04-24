@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Setup_responsible_user_group extends Root_Controller
+class Setup_user_group_responsible extends Root_Controller
 {
     public $message;
     public $permissions;

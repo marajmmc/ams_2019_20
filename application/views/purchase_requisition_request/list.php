@@ -25,6 +25,13 @@ if(isset($CI->permissions['action2']) && ($CI->permissions['action2']==1))
         'class'=>'button_jqx_action',
         'data-action-link'=>site_url($CI->controller_url.'/index/edit')
     );
+    $action_buttons[]=array
+    (
+        'type'=>'button',
+        'label'=>'File Upload',
+        'class'=>'button_jqx_action',
+        'data-action-link'=>site_url($CI->controller_url.'/index/list_file')
+    );
 }
 if(isset($CI->permissions['action4']) && ($CI->permissions['action4']==1))
 {
@@ -104,7 +111,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <?php
                 foreach($system_preference_items as $key=>$item)
                 {
-                    if(($key=='id') || ($key=='quantity_total') || ($key=='revision_count_request') )
+                    if(($key=='id') || ($key=='quantity_total') || ($key=='amount_price_unit') || ($key=='amount_price_total') || ($key=='revision_count_request') )
                     {
                         ?>
                         { name: '<?php echo $key ?>', type: 'number' },

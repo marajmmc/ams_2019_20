@@ -31,7 +31,7 @@ class Purchase_requisition_request extends Root_Controller
         $this->lang->language['LABEL_STATUS_FORWARD']='Forward Status';
         $this->lang->language['LABEL_STATUS_APPROVE']='Approve Status';
     }
-    public function index($action="list",$id=0)
+    public function index($action="list",$id=0,$id1=0)
     {
         if($action=="list")
         {
@@ -68,6 +68,14 @@ class Purchase_requisition_request extends Root_Controller
         elseif($action=="save_forward")
         {
             $this->system_save_forward();
+        }
+        elseif($action=="list_file")
+        {
+            $this->system_list_file($id);
+        }
+        elseif($action=="get_items_file")
+        {
+            $this->system_get_items_file($id);
         }
         elseif($action=="set_preference")
         {
@@ -119,6 +127,15 @@ class Purchase_requisition_request extends Root_Controller
             $data['status']= 1;
             $data['status_forward']= 1;
             $data['status_approve']= 1;
+        }
+        elseif($method=='list_file')
+        {
+            $data['id']= 1;
+            $data['file']= 1;
+            $data['remarks']= 1;
+            $data['ordering']= 1;
+            $data['revision_count']= 1;
+            $data['status']= 1;
         }
         else
         {
@@ -238,6 +255,7 @@ class Purchase_requisition_request extends Root_Controller
             $user=User_helper::get_user();
             $data['title']="Create New Requisition";
             $data['item']['id']=0;
+            $data['item']['user_responsible_group_id']='';
             $data['item']['date_requisition']=time();
             $data['item']['supplier_id']='';
             $data['item']['quantity_total']=1;
@@ -246,10 +264,10 @@ class Purchase_requisition_request extends Root_Controller
             $data['item']['specification']='';
             $data['item']['reason']='';
             $data['item']['remarks']='';
-            $data['categories']=$this->get_parent_wise_task();
+            $data['categories']=$this->get_categories();
             $data['suppliers']=Query_helper::get_info($this->config->item('table_ams_setup_suppliers'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
-            $data['responsible_user_groups']=Query_helper::get_info($this->config->item('table_ams_setup_responsible_user_group'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"', "user_ids like '%,$user->user_id,%'"),0,0,array('ordering ASC'));
-            if(!(sizeof($data['responsible_user_groups'])>0))
+            $data['user_responsible_groups']=Query_helper::get_info($this->config->item('table_ams_setup_responsible_user_group'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"', "user_ids like '%,$user->user_id,%'"),0,0,array('ordering ASC'));
+            if(!(sizeof($data['user_responsible_groups'])>0))
             {
                 $ajax['status']=false;
                 $ajax['system_message']='You are not assign to responsible user group.';
@@ -285,10 +303,12 @@ class Purchase_requisition_request extends Root_Controller
                 $item_id=$this->input->post('id');
             }
 
+            $user=User_helper::get_user();
+
             $data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
             if(!$data['item'])
             {
-                System_helper::invalid_try('Edit Non Exists',$item_id);
+                System_helper::invalid_try(__FUNCTION__,$item_id,'Edit Non Exists');
                 $ajax['status']=false;
                 $ajax['system_message']='Invalid Requisition.';
                 $this->json_return($ajax);
@@ -311,8 +331,15 @@ class Purchase_requisition_request extends Root_Controller
                 $ajax['system_message']='Purchase Order already rejected.';
                 $this->json_return($ajax);
             }
-            $data['categories']=$this->get_parent_wise_task();
+            $data['categories']=$this->get_categories();
             $data['suppliers']=Query_helper::get_info($this->config->item('table_ams_setup_suppliers'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
+            $data['user_responsible_groups']=Query_helper::get_info($this->config->item('table_ams_setup_responsible_user_group'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"', "user_ids like '%,$user->user_id,%'"),0,0,array('ordering ASC'));
+            if(!(sizeof($data['user_responsible_groups'])>0))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='You are not assign to responsible user group.';
+                $this->json_return($ajax);
+            }
 
             $data['title']="Edit Purchase Order :: ". $data['item']['id'];
             $ajax['status']=true;
@@ -364,7 +391,7 @@ class Purchase_requisition_request extends Root_Controller
             $result=Query_helper::get_info($this->config->item('table_ams_requisition_request'),'*',array('id ='.$id),1);
             if(!$result)
             {
-                System_helper::invalid_try('Update Non Exists',$id);
+                System_helper::invalid_try(__FUNCTION__,$id,'Update Non Exists');
                 $ajax['status']=false;
                 $ajax['system_message']='Invalid Requisition.';
                 $this->json_return($ajax);
@@ -475,7 +502,7 @@ class Purchase_requisition_request extends Root_Controller
             $data['item']=$this->db->get()->row_array();
             if(!$data['item'])
             {
-                System_helper::invalid_try('Forward Non Exists',$item_id);
+                System_helper::invalid_try(__FUNCTION__,$item_id,'Forward Non Exists');
                 $ajax['status']=false;
                 $ajax['system_message']='Invalid Requisition.';
                 $this->json_return($ajax);
@@ -498,7 +525,7 @@ class Purchase_requisition_request extends Root_Controller
                 $ajax['system_message']='Purchase Order already rejected.';
                 $this->json_return($ajax);
             }
-            $data['categories']=$this->get_parent_wise_task();
+            $data['categories']=$this->get_categories();
             $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
             $data['title']="Purchase Order Forward";
@@ -583,7 +610,327 @@ class Purchase_requisition_request extends Root_Controller
         }
         return true;
     }
-    public function get_parent_wise_task()
+    private function system_list_file($id)
+    {
+        if($id>0)
+        {
+            $data['item_id']=$id;
+        }
+        else
+        {
+            $data['item_id']=$this->input->post('id');
+        }
+        $user = User_helper::get_user();
+        $method='list_file';
+        if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
+        {
+            $data['system_preference_items']= System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method));
+
+            $this->db->from($this->config->item('table_ams_requisition_request').' item');
+            $this->db->select('item.*, category.name category_name');
+
+            $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
+
+            $this->db->where('item.id',$data['item_id']);
+            $this->db->where('item.status',$this->config->item('system_status_active'));
+            $this->db->where('item.status_forward',$this->config->item('system_status_pending'));
+            $item=$this->db->get()->row_array();
+            if($item['status_forward']==$this->config->item('system_status_forwarded'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Already Forwarded.';
+                $this->json_return($ajax);
+            }
+            $data['info_basic']=[];
+
+            $data['title']='File Upload List';
+            $ajax['status']=true;
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/list_file",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/list_file/'.$data['item_id'].'/');
+            $this->json_return($ajax);
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+    }
+    private function system_get_items_file($item_id)
+    {
+        $this->db->from($this->config->item('table_ams_requisition_file').' item');
+        $this->db->where('item.status !=',$this->config->item('system_status_delete'));
+        $this->db->order_by('item.ordering','ASC');
+        $this->db->order_by('item.id','ASC');
+        $this->db->where('item.task_name',$this->config->item('system_purpose_requisition_request'));
+        $this->db->where('item.item_id',$item_id);
+        $items=$this->db->get()->result_array();
+        foreach($items as &$item)
+        {
+            $file_location = $this->config->item('system_base_url_picture') . $item['file_location'];
+            if($item['file_name']=='no_image.jpg')
+            {
+                $item['file_name']='';
+            }
+            $item['file']='<a href="'.$file_location.'" class="external" target="_blank">'.$item['file_name'].'</a>';
+        }
+        $this->json_return($items);
+    }
+    private function system_add_file($item_id)
+    {
+        if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
+        {
+            $data['title']="Create New Notice File Upload";
+            $data['item']['id']=0;
+            $data['item']['purchase_order_id']=$item_id;
+            //$data['item']['purpose']=$this->config->item('system_purpose_requisition_request');
+            $data['item']['file_name']='';
+            $data['item']['file_location']='images/no_image.jpg';
+            $data['item']['remarks']='';
+            $data['item']['ordering']=99;
+            $data['item']['status']=$this->config->item('system_status_active');
+
+
+            $this->db->from($this->config->item('table_ams_requisition_request').' item');
+            $this->db->select('item.*, category.name category_name');
+
+            $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
+
+            $this->db->where('item.id',$item_id);
+            $this->db->where('item.status !=',$this->config->item('system_status_delete'));
+            $this->db->where('item.status_forward',$this->config->item('system_status_pending'));
+            $item=$this->db->get()->row_array();
+            if(!$item)
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Notice In-Active.';
+                $this->json_return($ajax);
+            }
+            if($item['status_forward']==$this->config->item('system_status_forwarded'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Notice Already Forwarded.';
+                $this->json_return($ajax);
+            }
+            $data['info_basic']=Notice_helper::get_basic_info($item);
+
+            $ajax['status']=true;
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_file",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/'.strtolower('add_'.$this->file_type).'/'.$item_id.'/');
+            $this->json_return($ajax);
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+    }
+    private function system_edit_file($item_id, $id)
+    {
+        if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
+        {
+            if($id>0)
+            {
+                $item_id=$id;
+            }
+            else
+            {
+                $item_id=$this->input->post('id');
+            }
+
+            /*$data['item']=Query_helper::get_info($this->config->item('table_pos_setup_notice_request'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
+            if(!$data['item'])
+            {
+                System_helper::invalid_try(__FUNCTION__,$item_id,'Edit Non Exists');
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Notice.';
+                $this->json_return($ajax);
+            }*/
+            $this->db->from($this->config->item('table_pos_setup_notice_request').' item');
+            $this->db->select('item.*');
+            $this->db->join($this->config->item('table_pos_setup_notice_types').' type','type.id=item.type_id','INNER');
+            $this->db->select('type.name notice_type');
+            $this->db->where('item.id',$item_id);
+            $this->db->where('item.status !=',$this->config->item('system_status_delete'));
+            $this->db->where('item.status_forward',$this->config->item('system_status_pending'));
+            $this->db->order_by('item.id','DESC');
+            $item=$this->db->get()->row_array();
+            if($item['status']==$this->config->item('system_status_inactive'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Notice In-Active.';
+                $this->json_return($ajax);
+            }
+            if($item['status_forward']==$this->config->item('system_status_forwarded'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Notice Already Forwarded.';
+                $this->json_return($ajax);
+            }
+            $data['info_basic']=Notice_helper::get_basic_info($item);
+            $data['item']=Query_helper::get_info($this->config->item('table_pos_setup_notice_file_videos'),array('*'),array('id ='.$item_id,'item_id ='.$item_id,'file_type ="'.$this->file_type.'"'),1,0,array('id ASC'));
+            if(!$data['item'])
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Try.';
+                $this->json_return($ajax);
+            }
+
+            $data['title']="Edit Notice File :: ". $data['item']['id'];
+            $ajax['status']=true;
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/edit_file",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/'.strtolower('edit_'.$this->file_type).'/'.$item_id.'/'.$item_id.'/');
+            $this->json_return($ajax);
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+    }
+    private function system_save_file()
+    {
+        $id = $this->input->post("id");
+        $item_id = $this->input->post("item_id");
+        $file_type = $this->input->post('file_type');
+        $user = User_helper::get_user();
+        $time=time();
+        $item_head=$this->input->post('item');
+        if(!(isset($this->permissions['action2']) && ($this->permissions['action2']==1)))
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+        if(!($id>0))
+        {
+            if(!$this->check_validation_file())
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->message;
+                $this->json_return($ajax);
+            }
+        }
+        $result=Query_helper::get_info($this->config->item('table_pos_setup_notice_request'),'*',array('id ='.$item_id),1);
+        if(!$result)
+        {
+            System_helper::invalid_try(__FUNCTION__,$item_id,'Update Non Exists');
+            $ajax['status']=false;
+            $ajax['system_message']='Invalid Notice.';
+            $this->json_return($ajax);
+        }
+        if($result['status']==$this->config->item('system_status_inactive'))
+        {
+            $ajax['status']=false;
+            $ajax['system_message']='Notice In-Active.';
+            $this->json_return($ajax);
+        }
+        if($result['status_forward']==$this->config->item('system_status_forwarded'))
+        {
+            $ajax['status']=false;
+            $ajax['system_message']='Notice Already Forwarded.';
+            $this->json_return($ajax);
+        }
+        $this->file_type = $file_type;
+        $data=array();
+        $uploaded_files = array();
+
+        $path = 'images/notice/' . $item_id;
+        if ($file_type == $this->config->item('system_file_type_image')) // For Image Upload
+        {
+            $uploaded_files = System_helper::upload_file($path,'jpg|jpeg|png|bmp|gif|pdf|doc|docx|xls|xlsx',10240);
+            $data['file_type']=$this->config->item('system_file_type_image');
+        }
+        else if ($file_type == $this->config->item('system_file_type_video')) // For Video Upload
+        {
+            $uploaded_files = System_helper::upload_file($path, $this->config->item('system_file_type_video_ext'), $this->config->item('system_file_type_video_max_size'));
+            $data['file_type']=$this->config->item('system_file_type_video');
+        }
+        else
+        {
+            //$data['file_type']='';
+        }
+
+        if(array_key_exists('file_name',$uploaded_files))
+        {
+            if($uploaded_files['file_name']['status'])
+            {
+                $data['file_name']=$uploaded_files['file_name']['info']['file_name'];
+                $data['file_location']=$path.'/'.$uploaded_files['file_name']['info']['file_name'];
+            }
+            else
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$uploaded_files['file_name']['message'];
+                $this->json_return($ajax);
+                die();
+            }
+        }
+
+
+        $this->db->trans_start();  //DB Transaction Handle START
+
+        $data['remarks']=$item_head['remarks'];
+        $data['link_url']=$item_head['link_url'];
+        $data['ordering']=$item_head['ordering'];
+        $data['status']=$item_head['status'];
+        if($id>0)
+        {
+            $data['date_updated'] = $time;
+            $data['user_updated'] = $user->user_id;
+            $this->db->set('revision_count', 'revision_count+1', FALSE);
+            Query_helper::update($this->config->item('table_pos_setup_notice_file_videos'),$data, array('id='.$id), false);
+        }
+        else
+        {
+            $data['item_id']=$item_id;
+            $data['date_created']=$time;
+            $data['user_created']=$user->user_id;
+            $data['revision_count']=1;
+            Query_helper::add($this->config->item('table_pos_setup_notice_file_videos'),$data, false);
+        }
+
+        $this->db->trans_complete();   //DB Transaction Handle END
+
+        if ($this->db->trans_status() === TRUE)
+        {
+            $save_and_new=$this->input->post('system_save_new_status');
+            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+            if($save_and_new==1)
+            {
+                $this->system_add_file($item_id);
+            }
+            else
+            {
+                $this->system_list_file($item_id);
+            }
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+            $this->json_return($ajax);
+        }
+    }
+    public function get_categories() // children
     {
         $this->db->from($this->config->item('table_ams_setup_categories'));
         $this->db->order_by('ordering');

@@ -40,3 +40,10 @@ $config['system_purpose_login_status_mobile_verification']='login_status_mobile_
 $config['system_purpose_bms_menu_odd_color']='ams_menu_odd_color';
 $config['system_purpose_bms_menu_even_color']='ams_menu_even_color';
 
+// file upload :: purpose
+$config['system_purpose_requisition_request']='Request';
+$config['system_purpose_requisition_approve']='Approve';
+$config['system_purpose_requisition_payment']='Payment';
+$config['system_purpose_requisition_receive']='Receive';
+
+

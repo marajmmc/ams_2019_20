@@ -90,7 +90,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <?php
                  foreach($system_preference_items as $key=>$item)
                  {
-                   if(($key=='id') || ($key=='quantity_total') || ($key=='revision_count_request') )
+                   if(($key=='id') || ($key=='quantity_total') || ($key=='amount_price_unit') || ($key=='amount_price_total') || ($key=='revision_count_request') )
                     {
                         ?>
                         { name: '<?php echo $key ?>', type: 'number' },

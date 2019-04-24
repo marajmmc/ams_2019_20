@@ -48,23 +48,23 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             </div>
             <div class="col-sm-4 col-xs-8">
                 <?php
-                if(sizeof($responsible_user_groups)==1)
+                if(sizeof($user_responsible_groups)==1)
                 {
                     ?>
-                    <label class="control-label"><?php echo $responsible_user_groups[0]['text']?></label>
-                    <input type="hidden" name="responsible_user_group_id" id="responsible_user_group_id" value="<?php echo $responsible_user_groups[0]['value']?>" />
+                    <label class="control-label"><?php echo $user_responsible_groups[0]['text']?></label>
+                    <input type="hidden" name="item[user_responsible_group_id]" id="user_responsible_group_id" value="<?php echo $user_responsible_groups[0]['value']?>" />
                 <?php
                 }
                 else
                 {
                     ?>
-                    <select id="responsible_user_group_id" name="responsible_user_group_id" class="form-control">
+                    <select id="user_responsible_group_id" name="item[user_responsible_group_id]" class="form-control">
                         <option value=""><?php echo $CI->lang->line('SELECT');?></option>
                         <?php
-                        foreach($responsible_user_groups as $user_group)
+                        foreach($user_responsible_groups as $user_group)
                         {
                             ?>
-                            <option value="<?php echo $user_group['value'];?>"><?php echo $user_group['text'];?></option>
+                            <option value="<?php echo $user_group['value'];?>" <?php if($user_group['value']==$item['user_responsible_group_id']){echo "selected='selected'";}?>><?php echo $user_group['text'];?></option>
                         <?php
                         }
                         ?>
@@ -275,28 +275,28 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         $(document).on("change", ".system_button_add_more", function(event)
         {
             var parent_id=$(this).val();
-            var current_id=parseInt($(this).attr('data-current-id'));
+            var category_level=parseInt($(this).attr('data-current-id'));
             $('.div_removable').each(function(index, element)
             {
-                var container_data_current_id=parseInt($(element).attr('data-current-id'));
-                if(container_data_current_id>current_id)
+                var container_data_category_level=parseInt($(element).attr('data-current-id'));
+                if(container_data_category_level>category_level)
                 {
-                    $(element).remove();
-                    $("#category_id_container_"+container_data_current_id).remove();
+                    //$(element).remove();
+                    $("#category_id_container_"+container_data_category_level).remove();
                 }
             });
-            current_id=current_id+1;
+            category_level=category_level+1;
             if(parent_id>0)
             {
                 if(categories[parent_id]!==undefined)
                 {
                     var content_id='#system_content_add_more';
-                    $(content_id+' .div_removable').attr('id','category_id_container_'+current_id);
-                    $(content_id+' .div_removable').attr('data-current-id',current_id);
+                    $(content_id+' .div_removable').attr('id','category_id_container_'+category_level);
+                    $(content_id+' .div_removable').attr('data-current-id',category_level);
 
-                    $(content_id+' .parent_id').attr('id','parent_id_'+current_id);
+                    $(content_id+' .parent_id').attr('id','parent_id_'+category_level);
                     $(content_id+' .parent_id').attr('name','categories[parent_id][]');
-                    $(content_id+' .parent_id').attr('data-current-id',current_id);
+                    $(content_id+' .parent_id').attr('data-current-id',category_level);
 
                     var html=$(content_id).html();
                     $("#items_container").append(html);
@@ -308,7 +308,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     $(content_id+' .parent_id').removeAttr('name');
                     $(content_id+' .parent_id').removeAttr('data-current-id');
 
-                    $('#parent_id_'+current_id).html(drop_down_generator(categories[parent_id]));
+                    $('#parent_id_'+category_level).html(drop_down_generator(categories[parent_id]));
                 }
                 else
                 {
