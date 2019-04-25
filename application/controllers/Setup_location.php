@@ -41,14 +41,6 @@ class Setup_location extends Root_Controller
         {
             $this->system_tree_view();
         }
-        elseif ($action == "set_preference_list")
-        {
-            $this->system_set_preference('list');
-        }
-        elseif ($action == "save_preference")
-        {
-            System_helper::save_preference();
-        }
         else
         {
             $this->system_list();
@@ -72,26 +64,6 @@ class Setup_location extends Root_Controller
             $data['status'] = 1;
         }
         return $data;
-    }
-
-    private function system_set_preference($method = 'list')
-    {
-        $user = User_helper::get_user();
-        if (isset($this->permissions['action6']) && ($this->permissions['action6'] == 1))
-        {
-            $data['system_preference_items'] = System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method));
-            $data['preference_method_name'] = $method;
-            $ajax['status'] = true;
-            $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view("preference_add_edit", $data, true));
-            $ajax['system_page_url'] = site_url($this->controller_url . '/index/set_preference_' . $method);
-            $this->json_return($ajax);
-        }
-        else
-        {
-            $ajax['status'] = false;
-            $ajax['system_message'] = $this->lang->line("YOU_DONT_HAVE_ACCESS");
-            $this->json_return($ajax);
-        }
     }
 
     private function system_list()
