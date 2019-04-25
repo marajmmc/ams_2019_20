@@ -226,7 +226,7 @@ class Setup_category extends Root_Controller
                 $this->json_return($ajax);
             }
 
-            $data['categories'] = $this->get_category_tree_list('edit');
+            $data['categories'] = $this->get_category_tree_list($item_id);
             $data['title'] = "Edit Category :: " . $data['item']['name'];
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/add_edit", $data, true));
@@ -376,9 +376,13 @@ class Setup_category extends Root_Controller
         return true;
     }
 
-    private function get_category_tree_list($mode = '') //Sub categories list
+    private function get_category_tree_list($id = 0) //Sub categories list
     {
-        if ($mode != 'edit')
+        if ($id > 0)
+        {
+            $this->db->where('id !=', $id);
+        }
+        else
         {
             $this->db->where('status', $this->config->item('system_status_active'));
         }
