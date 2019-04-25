@@ -157,7 +157,7 @@ class Setup_location extends Root_Controller
                 'status' => $this->config->item('system_status_active')
             );
 
-            $data['locations'] = $this->get_location_tree_list();
+            $data['locations'] = Category_helper::get_location_tree_list();
             $data['title'] = "Create New Location";
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/add_edit", $data, true));
@@ -198,7 +198,7 @@ class Setup_location extends Root_Controller
                 $this->json_return($ajax);
             }
 
-            $data['locations'] = $this->get_location_tree_list($item_id);
+            $data['locations'] = Category_helper::get_location_tree_list($item_id);
             $data['title'] = "Edit Location :: " . $data['item']['name'];
             $ajax['status'] = true;
             $ajax['system_content'][] = array("id" => "#system_content", "html" => $this->load->view($this->controller_url . "/add_edit", $data, true));
@@ -346,45 +346,5 @@ class Setup_location extends Root_Controller
             return false;
         }
         return true;
-    }
-
-    private function get_location_tree_list($id = 0) //Sub locations list
-    {
-        if ($id > 0)
-        {
-            $this->db->where('id !=', $id);
-        }
-        else
-        {
-            $this->db->where('status', $this->config->item('system_status_active'));
-        }
-        $this->db->order_by('ordering');
-        $results = $this->db->get($this->config->item('table_ams_setup_locations'))->result_array();
-
-        $children = array();
-        foreach ($results as $result)
-        {
-            $children[$result['parent']]['ids'][$result['id']] = $result['id'];
-            $children[$result['parent']]['modules'][$result['id']] = $result;
-        }
-        $level0 = $children[0]['modules'];
-        $tree = array();
-        foreach ($level0 as $module)
-        {
-            Task_helper::get_sub_modules_tasks_tree($module, '', $tree, $children);
-        }
-
-        $tree_list = array();
-        foreach ($tree as $key => $row)
-        {
-            $tree_list[$key] = $row['module_task'];
-            $tree_list[$key]['prefix'] = $row['prefix'];
-            if ($row['module_task']['status'] == $this->config->item('system_status_inactive'))
-            {
-                $tree_list[$key]['name'] .= ' (' . $this->config->item('system_status_inactive') . ')';
-            }
-        }
-
-        return $tree_list;
     }
 }
