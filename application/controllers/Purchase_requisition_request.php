@@ -771,7 +771,6 @@ class Purchase_requisition_request extends Root_Controller
 
             $this->db->from($this->config->item('table_ams_requisition_request').' item');
             $this->db->select('item.*, category.name category_name');
-
             $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
             $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
             $this->db->select('supplier.name supplier_name');
@@ -789,7 +788,7 @@ class Purchase_requisition_request extends Root_Controller
                 $ajax['system_message']='Already Forwarded.';
                 $this->json_return($ajax);
             }
-            $data['info_basic']=Ams_helper::get_basic_info($data['item']);
+            $data['info_basic']=Ams_helper::get_basic_info($item);
 
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_file",$data,true));
