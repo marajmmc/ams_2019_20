@@ -11,19 +11,14 @@ if(isset($CI->permissions['action0']) && ($CI->permissions['action0']==1))
 }
 if(isset($CI->permissions['action2']) && ($CI->permissions['action2']==1))
 {
-    $button_label=$CI->lang->line('LABEL_FILE_IMAGE');
-    if($file_type==$CI->config->item('system_file_type_video'))
-    {
-        $button_label=$file_type;
-    }
     $action_buttons[]=array(
-        'label'=>$CI->lang->line("ACTION_NEW").' '.$button_label,
+        'label'=>$CI->lang->line("ACTION_NEW").' File',
         'href'=>site_url($CI->controller_url.'/index/add_file/'.$item_id)
     );
     $action_buttons[]=array
     (
         'type'=>'button',
-        'label'=>$CI->lang->line('ACTION_EDIT').' '.$button_label,
+        'label'=>$CI->lang->line('ACTION_EDIT').' File',
         'class'=>'button_jqx_action',
         'data-action-link'=>site_url($CI->controller_url.'/index/edit_file/'.$item_id)
     );
@@ -49,7 +44,7 @@ if(isset($CI->permissions['action5']) && ($CI->permissions['action5']==1))
 }
 $action_buttons[]=array(
     'label'=>$CI->lang->line("ACTION_REFRESH"),
-    'href'=>site_url($CI->controller_url.'/index/'.strtolower('list_'.$file_type).'/'.$item_id)
+    'href'=>site_url($CI->controller_url.'/index/'.strtolower('list_file').'/'.$item_id)
 );
 $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
 ?>
@@ -132,9 +127,8 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 columns:
                 [
                     { text: '<?php echo $CI->lang->line('LABEL_ID'); ?>', dataField: 'id',width:'50',cellsAlign:'right', cellsrenderer: cellsrenderer, rendered: tooltiprenderer,hidden: <?php echo $system_preference_items['id']?0:1;?>},
-                    { text: '<?php echo $CI->lang->line('LABEL_FILE_IMAGE'); ?>', dataField: 'file_image_video',width:'300', cellsrenderer: cellsrenderer, rendered: tooltiprenderer, hidden: <?php echo $system_preference_items['file_image_video']?0:1;?>},
+                    { text: '<?php echo $CI->lang->line('LABEL_FILE'); ?>', dataField: 'file',width:'300', cellsrenderer: cellsrenderer, rendered: tooltiprenderer, hidden: <?php echo $system_preference_items['file']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_REMARKS'); ?>', dataField: 'remarks',width:'300', cellsrenderer: cellsrenderer, rendered: tooltiprenderer, hidden: <?php echo $system_preference_items['remarks']?0:1;?>},
-                    { text: '<?php echo $CI->lang->line('LABEL_LINK_URL'); ?>',dataField: 'link_url',width:'200', cellsrenderer: cellsrenderer, rendered: tooltiprenderer,hidden: <?php echo $system_preference_items['link_url']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_REVISION_COUNT'); ?>',dataField: 'revision_count',width:'50',cellsAlign:'right', cellsrenderer: cellsrenderer, rendered: tooltiprenderer,hidden: <?php echo $system_preference_items['revision_count']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_ORDERING'); ?>',dataField: 'ordering',width:'50',cellsAlign:'right', cellsrenderer: cellsrenderer, rendered: tooltiprenderer,hidden: <?php echo $system_preference_items['ordering']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_STATUS'); ?>',dataField: 'status',width:'80',filtertype: 'list', cellsrenderer: cellsrenderer, rendered: tooltiprenderer,hidden: <?php echo $system_preference_items['status']?0:1;?>}

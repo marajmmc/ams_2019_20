@@ -30,6 +30,8 @@ class Purchase_requisition_request extends Root_Controller
         $this->lang->language['LABEL_ITEMS']='Add More Items';
         $this->lang->language['LABEL_STATUS_FORWARD']='Forward Status';
         $this->lang->language['LABEL_STATUS_APPROVE']='Approve Status';
+        $this->lang->language['LABEL_FILE']='File';
+        $this->lang->language['LABEL_REVISION_COUNT']='Number of Edit';
     }
     public function index($action="list",$id=0,$id1=0)
     {
@@ -69,6 +71,10 @@ class Purchase_requisition_request extends Root_Controller
         {
             $this->system_save_forward();
         }
+        elseif($action=="details")
+        {
+            $this->system_details($id);
+        }
         elseif($action=="list_file")
         {
             $this->system_list_file($id);
@@ -76,6 +82,18 @@ class Purchase_requisition_request extends Root_Controller
         elseif($action=="get_items_file")
         {
             $this->system_get_items_file($id);
+        }
+        elseif($action=="add_file")
+        {
+            $this->system_add_file($id,$id1);
+        }
+        elseif($action=="edit_file")
+        {
+            $this->system_edit_file($id,$id1);
+        }
+        elseif($action=="save_file")
+        {
+            $this->system_save_file();
         }
         elseif($action=="set_preference")
         {
@@ -528,6 +546,14 @@ class Purchase_requisition_request extends Root_Controller
             $data['categories']=$this->get_categories();
             $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
+            $this->db->from($this->config->item('table_ams_requisition_file').' item');
+            $this->db->where('item.status =',$this->config->item('system_status_active'));
+            $this->db->order_by('item.ordering','ASC');
+            $this->db->order_by('item.id','ASC');
+            $this->db->where('item.purpose',$this->config->item('system_purpose_requisition_request'));
+            $this->db->where('item.purchase_order_id',$item_id);
+            $data['files']=$this->db->get()->result_array();
+
             $data['title']="Purchase Order Forward";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/forward",$data,true));
@@ -596,19 +622,65 @@ class Purchase_requisition_request extends Root_Controller
             $this->json_return($ajax);
         }
     }
-    private function check_validation()
+    private function system_details($id)
     {
-        $this->load->library('form_validation');
-        $this->form_validation->set_rules('item[quantity_total]',$this->lang->line('LABEL_QUANTITY_TOTAL'),'required');
-        $this->form_validation->set_rules('item[amount_price_unit]',$this->lang->line('LABEL_AMOUNT_PRICE_UNIT'),'required');
-        $this->form_validation->set_rules('item[specification]',$this->lang->line('LABEL_SPECIFICATION'),'required');
-        $this->form_validation->set_rules('item[reason]',$this->lang->line('LABEL_REASON'),'required');
-        if($this->form_validation->run() == FALSE)
+        if(isset($this->permissions['action0'])&&($this->permissions['action0']==1))
         {
-            $this->message=validation_errors();
-            return false;
+            if($id>0)
+            {
+                $item_id=$id;
+            }
+            else
+            {
+                $item_id=$this->input->post('id');
+            }
+            //$data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
+            $this->db->from($this->config->item('table_ams_requisition_request').' item');
+            $this->db->select('item.*, category.name category_name');
+
+            $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
+
+            $this->db->where('item.status !=',$this->config->item('system_status_delete'));
+            $this->db->where('item.id',$item_id);
+            $data['item']=$this->db->get()->row_array();
+            if(!$data['item'])
+            {
+                System_helper::invalid_try(__FUNCTION__,$item_id,'Forward Non Exists');
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Try.';
+                $this->json_return($ajax);
+            }
+
+            $data['categories']=$this->get_categories();
+            $data['info_basic']=Ams_helper::get_basic_info($data['item']);
+
+            $this->db->from($this->config->item('table_ams_requisition_file').' item');
+            $this->db->where('item.status =',$this->config->item('system_status_active'));
+            $this->db->order_by('item.ordering','ASC');
+            $this->db->order_by('item.id','ASC');
+            $this->db->where('item.purpose',$this->config->item('system_purpose_requisition_request'));
+            $this->db->where('item.purchase_order_id',$item_id);
+            $data['files']=$this->db->get()->result_array();
+
+            $data['title']="Purchase Order Details :: ". $data['item']['id'];
+            $ajax['status']=true;
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->common_view_location."/details",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/details/'.$item_id);
+            $this->json_return($ajax);
+
         }
-        return true;
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
     }
     private function system_list_file($id)
     {
@@ -643,7 +715,7 @@ class Purchase_requisition_request extends Root_Controller
                 $ajax['system_message']='Already Forwarded.';
                 $this->json_return($ajax);
             }
-            $data['info_basic']=[];
+            $data['info_basic']=Ams_helper::get_basic_info($item);
 
             $data['title']='File Upload List';
             $ajax['status']=true;
@@ -662,14 +734,14 @@ class Purchase_requisition_request extends Root_Controller
             $this->json_return($ajax);
         }
     }
-    private function system_get_items_file($item_id)
+    private function system_get_items_file($purchase_order_id)
     {
         $this->db->from($this->config->item('table_ams_requisition_file').' item');
         $this->db->where('item.status !=',$this->config->item('system_status_delete'));
         $this->db->order_by('item.ordering','ASC');
         $this->db->order_by('item.id','ASC');
-        $this->db->where('item.task_name',$this->config->item('system_purpose_requisition_request'));
-        $this->db->where('item.item_id',$item_id);
+        $this->db->where('item.purpose',$this->config->item('system_purpose_requisition_request'));
+        $this->db->where('item.purchase_order_id',$purchase_order_id);
         $items=$this->db->get()->result_array();
         foreach($items as &$item)
         {
@@ -682,13 +754,13 @@ class Purchase_requisition_request extends Root_Controller
         }
         $this->json_return($items);
     }
-    private function system_add_file($item_id)
+    private function system_add_file($purchase_order_id)
     {
         if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
         {
-            $data['title']="Create New Notice File Upload";
+            $data['title']="Create New File Upload";
             $data['item']['id']=0;
-            $data['item']['purchase_order_id']=$item_id;
+            $data['item']['purchase_order_id']=$purchase_order_id;
             //$data['item']['purpose']=$this->config->item('system_purpose_requisition_request');
             $data['item']['file_name']='';
             $data['item']['file_location']='images/no_image.jpg';
@@ -703,24 +775,21 @@ class Purchase_requisition_request extends Root_Controller
             $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
             $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
             $this->db->select('supplier.name supplier_name');
-
-            $this->db->where('item.id',$item_id);
-            $this->db->where('item.status !=',$this->config->item('system_status_delete'));
-            $this->db->where('item.status_forward',$this->config->item('system_status_pending'));
+            $this->db->where('item.id',$purchase_order_id);
             $item=$this->db->get()->row_array();
             if(!$item)
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Notice In-Active.';
+                $ajax['system_message']=' Invalid Try.';
                 $this->json_return($ajax);
             }
             if($item['status_forward']==$this->config->item('system_status_forwarded'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Notice Already Forwarded.';
+                $ajax['system_message']='Already Forwarded.';
                 $this->json_return($ajax);
             }
-            $data['info_basic']=Notice_helper::get_basic_info($item);
+            $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/add_file",$data,true));
@@ -728,7 +797,7 @@ class Purchase_requisition_request extends Root_Controller
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url.'/index/'.strtolower('add_'.$this->file_type).'/'.$item_id.'/');
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/add_file/'.$purchase_order_id.'/');
             $this->json_return($ajax);
         }
         else
@@ -738,7 +807,7 @@ class Purchase_requisition_request extends Root_Controller
             $this->json_return($ajax);
         }
     }
-    private function system_edit_file($item_id, $id)
+    private function system_edit_file($purchase_order_id, $id)
     {
         if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
         {
@@ -751,52 +820,45 @@ class Purchase_requisition_request extends Root_Controller
                 $item_id=$this->input->post('id');
             }
 
-            /*$data['item']=Query_helper::get_info($this->config->item('table_pos_setup_notice_request'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
+            $data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_file'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
             if(!$data['item'])
             {
-                System_helper::invalid_try(__FUNCTION__,$item_id,'Edit Non Exists');
-                $ajax['status']=false;
-                $ajax['system_message']='Invalid Notice.';
-                $this->json_return($ajax);
-            }*/
-            $this->db->from($this->config->item('table_pos_setup_notice_request').' item');
-            $this->db->select('item.*');
-            $this->db->join($this->config->item('table_pos_setup_notice_types').' type','type.id=item.type_id','INNER');
-            $this->db->select('type.name notice_type');
-            $this->db->where('item.id',$item_id);
-            $this->db->where('item.status !=',$this->config->item('system_status_delete'));
-            $this->db->where('item.status_forward',$this->config->item('system_status_pending'));
-            $this->db->order_by('item.id','DESC');
-            $item=$this->db->get()->row_array();
-            if($item['status']==$this->config->item('system_status_inactive'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']='Notice In-Active.';
-                $this->json_return($ajax);
-            }
-            if($item['status_forward']==$this->config->item('system_status_forwarded'))
-            {
-                $ajax['status']=false;
-                $ajax['system_message']='Notice Already Forwarded.';
-                $this->json_return($ajax);
-            }
-            $data['info_basic']=Notice_helper::get_basic_info($item);
-            $data['item']=Query_helper::get_info($this->config->item('table_pos_setup_notice_file_videos'),array('*'),array('id ='.$item_id,'item_id ='.$item_id,'file_type ="'.$this->file_type.'"'),1,0,array('id ASC'));
-            if(!$data['item'])
-            {
+                System_helper::invalid_try(__FUNCTION__,$item_id,'Edit File Non Exists');
                 $ajax['status']=false;
                 $ajax['system_message']='Invalid Try.';
                 $this->json_return($ajax);
             }
 
-            $data['title']="Edit Notice File :: ". $data['item']['id'];
+            $this->db->from($this->config->item('table_ams_requisition_request').' item');
+            $this->db->select('item.*, category.name category_name');
+            $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
+            $this->db->where('item.id',$purchase_order_id);
+            $item=$this->db->get()->row_array();
+            if(!$item)
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=' Invalid Try.';
+                $this->json_return($ajax);
+            }
+            if($item['status_forward']==$this->config->item('system_status_forwarded'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Already Forwarded.';
+                $this->json_return($ajax);
+            }
+
+            $data['info_basic']=Ams_helper::get_basic_info($item);
+
+            $data['title']="Edit File :: ". $data['item']['id'];
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/edit_file",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url.'/index/'.strtolower('edit_'.$this->file_type).'/'.$item_id.'/'.$item_id.'/');
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/'.strtolower('edit_file').'/'.$purchase_order_id.'/'.$item_id.'/');
             $this->json_return($ajax);
         }
         else
@@ -809,8 +871,7 @@ class Purchase_requisition_request extends Root_Controller
     private function system_save_file()
     {
         $id = $this->input->post("id");
-        $item_id = $this->input->post("item_id");
-        $file_type = $this->input->post('file_type');
+        $purchase_order_id = $this->input->post("purchase_order_id");
         $user = User_helper::get_user();
         $time=time();
         $item_head=$this->input->post('item');
@@ -829,45 +890,24 @@ class Purchase_requisition_request extends Root_Controller
                 $this->json_return($ajax);
             }
         }
-        $result=Query_helper::get_info($this->config->item('table_pos_setup_notice_request'),'*',array('id ='.$item_id),1);
+        $result=Query_helper::get_info($this->config->item('table_ams_requisition_request'),'*',array('id ='.$purchase_order_id),1);
         if(!$result)
         {
-            System_helper::invalid_try(__FUNCTION__,$item_id,'Update Non Exists');
+            System_helper::invalid_try(__FUNCTION__,$purchase_order_id,'Update Non Exists');
             $ajax['status']=false;
-            $ajax['system_message']='Invalid Notice.';
-            $this->json_return($ajax);
-        }
-        if($result['status']==$this->config->item('system_status_inactive'))
-        {
-            $ajax['status']=false;
-            $ajax['system_message']='Notice In-Active.';
+            $ajax['system_message']='Invalid try.';
             $this->json_return($ajax);
         }
         if($result['status_forward']==$this->config->item('system_status_forwarded'))
         {
             $ajax['status']=false;
-            $ajax['system_message']='Notice Already Forwarded.';
+            $ajax['system_message']='Already Forwarded.';
             $this->json_return($ajax);
         }
-        $this->file_type = $file_type;
         $data=array();
-        $uploaded_files = array();
 
-        $path = 'images/notice/' . $item_id;
-        if ($file_type == $this->config->item('system_file_type_image')) // For Image Upload
-        {
-            $uploaded_files = System_helper::upload_file($path,'jpg|jpeg|png|bmp|gif|pdf|doc|docx|xls|xlsx',10240);
-            $data['file_type']=$this->config->item('system_file_type_image');
-        }
-        else if ($file_type == $this->config->item('system_file_type_video')) // For Video Upload
-        {
-            $uploaded_files = System_helper::upload_file($path, $this->config->item('system_file_type_video_ext'), $this->config->item('system_file_type_video_max_size'));
-            $data['file_type']=$this->config->item('system_file_type_video');
-        }
-        else
-        {
-            //$data['file_type']='';
-        }
+        $path = 'images/purchase/' . $purchase_order_id;
+        $uploaded_files = System_helper::upload_file($path,'jpg|jpeg|png|bmp|gif|pdf|doc|docx|xls|xlsx',10240);
 
         if(array_key_exists('file_name',$uploaded_files))
         {
@@ -888,24 +928,27 @@ class Purchase_requisition_request extends Root_Controller
 
         $this->db->trans_start();  //DB Transaction Handle START
 
-        $data['remarks']=$item_head['remarks'];
-        $data['link_url']=$item_head['link_url'];
-        $data['ordering']=$item_head['ordering'];
-        $data['status']=$item_head['status'];
         if($id>0)
         {
+            $data['remarks']=$item_head['remarks'];
+            $data['ordering']=$item_head['ordering'];
+            $data['status']=$item_head['status'];
             $data['date_updated'] = $time;
             $data['user_updated'] = $user->user_id;
             $this->db->set('revision_count', 'revision_count+1', FALSE);
-            Query_helper::update($this->config->item('table_pos_setup_notice_file_videos'),$data, array('id='.$id), false);
+            Query_helper::update($this->config->item('table_ams_requisition_file'),$data, array('id='.$id), false);
         }
         else
         {
-            $data['item_id']=$item_id;
+            $data['purchase_order_id']=$purchase_order_id;
+            $data['purpose']=$this->config->item('system_purpose_requisition_request');
+            $data['remarks']=$item_head['remarks'];
+            $data['ordering']=$item_head['ordering'];
+            $data['status']=$item_head['status'];
             $data['date_created']=$time;
             $data['user_created']=$user->user_id;
             $data['revision_count']=1;
-            Query_helper::add($this->config->item('table_pos_setup_notice_file_videos'),$data, false);
+            Query_helper::add($this->config->item('table_ams_requisition_file'),$data, false);
         }
 
         $this->db->trans_complete();   //DB Transaction Handle END
@@ -916,11 +959,11 @@ class Purchase_requisition_request extends Root_Controller
             $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
             if($save_and_new==1)
             {
-                $this->system_add_file($item_id);
+                $this->system_add_file($purchase_order_id);
             }
             else
             {
-                $this->system_list_file($item_id);
+                $this->system_list_file($purchase_order_id);
             }
         }
         else
@@ -942,5 +985,34 @@ class Purchase_requisition_request extends Root_Controller
             $parents[$result['parent']][$result['id']]=$result['name'];
         }
         return json_encode($parents);
+    }
+    private function check_validation()
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('item[quantity_total]',$this->lang->line('LABEL_QUANTITY_TOTAL'),'required');
+        $this->form_validation->set_rules('item[amount_price_unit]',$this->lang->line('LABEL_AMOUNT_PRICE_UNIT'),'required');
+        $this->form_validation->set_rules('item[specification]',$this->lang->line('LABEL_SPECIFICATION'),'required');
+        $this->form_validation->set_rules('item[reason]',$this->lang->line('LABEL_REASON'),'required');
+        if($this->form_validation->run() == FALSE)
+        {
+            $this->message=validation_errors();
+            return false;
+        }
+        return true;
+    }
+    private function check_validation_file()
+    {
+        $this->load->library('form_validation');
+        $this->form_validation->set_rules('purchase_order_id','ID','required');
+        if (!($_FILES['file_name']['name']))
+        {
+            $this->form_validation->set_rules('file_name',$this->lang->line('LABEL_FILE'),'required');
+        }
+        if($this->form_validation->run() == FALSE)
+        {
+            $this->message=validation_errors();
+            return false;
+        }
+        return true;
     }
 }

@@ -92,6 +92,36 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             </tbody>
         </table>
         <hr/>
+        <table class="table table-bordered table-responsive system_table_details_view">
+            <thead>
+            <tr>
+                <th style="width: 10px;">SL#</th>
+                <th style="width: 400px;">File Name</th>
+                <th>Remarks</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php
+            $serial_no=0;
+            foreach($files as $file)
+            {
+                ++$serial_no;
+                ?>
+                <tr>
+                    <td><?php echo $serial_no;?></td>
+                    <td>
+                        <a href="<?php echo $CI->config->item('system_base_url_picture') . $file['file_location']; ?>" target="_blank" class="external blob">
+                            <?php echo $file['file_name']?>
+                        </a>
+                    </td>
+                    <td><?php echo nl2br($file['remarks'])?></td>
+                </tr>
+            <?php
+            }
+            ?>
+            </tbody>
+        </table>
+        <hr/>
         <div class="row show-grid">
             <div class="col-xs-4">
                 <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_FORWARD');?><span style="color:#FF0000">*</span></label>
