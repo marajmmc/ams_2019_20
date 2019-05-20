@@ -5,6 +5,7 @@ class Setup_category extends Root_Controller
     public $message;
     public $permissions;
     public $controller_url;
+    public $prefix_length;
 
     public function __construct()
     {
@@ -13,6 +14,9 @@ class Setup_category extends Root_Controller
         $this->permissions = User_helper::get_permission(get_class($this));
         $this->controller_url = strtolower(get_class($this));
         $this->load->helper('category');
+        $this->prefix_length = 3;
+        // Extra Language
+        $this->lang->language['LABEL_PREFIX'] = 'Prefix';
     }
 
     public function index($action = "list", $id = 0)
@@ -152,6 +156,7 @@ class Setup_category extends Root_Controller
             $data['item'] = Array(
                 'id' => 0,
                 'name' => '',
+                'prefix' => '',
                 'parent' => 0,
                 'ordering' => 99,
                 'status' => $this->config->item('system_status_active')
@@ -338,6 +343,7 @@ class Setup_category extends Root_Controller
     {
         $this->load->library('form_validation');
         $this->form_validation->set_rules('item[name]', $this->lang->line('LABEL_NAME'), 'required|trim');
+        $this->form_validation->set_rules('item[prefix]', $this->lang->line('LABEL_PREFIX'), 'required|trim|alpha|exact_length['.$this->prefix_length.']');
         $this->form_validation->set_rules('item[ordering]', $this->lang->line('LABEL_ORDER'), 'required');
         $this->form_validation->set_rules('item[status]', $this->lang->line('LABEL_STATUS'), 'required');
         if ($this->form_validation->run() == FALSE)

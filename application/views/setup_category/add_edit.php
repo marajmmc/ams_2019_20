@@ -40,17 +40,28 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
 
         <div class="row show-grid">
             <div class="col-xs-4">
-                <label for="name" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_NAME'); ?> <span style="color:#FF0000">*</span></label>
+                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_NAME'); ?> <span style="color:#FF0000">*</span></label>
             </div>
-            <div class="col-sm-4 col-xs-8">
+            <div class="col-xs-4">
                 <input type="text" name="item[name]" id="name" class="form-control" value="<?php echo $item['name']; ?>"/>
+            </div>
+        </div>
+        <div class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_PREFIX'); ?> <span style="color:#FF0000">*</span></label>
+            </div>
+            <div class="col-xs-1">
+                <input type="text" name="item[prefix]" id="prefix" class="form-control" maxlength="<?php echo $CI->prefix_length; ?>" value="<?php echo $item['prefix']; ?>"/>
+            </div>
+            <div class="col-xs-3" style="padding-left:0">
+                <label class="control-label" style="font-weight:normal;margin-top:5px"><span style="color:#FF0000">( Must be 3 characters &amp; alphabetic )</span></label>
             </div>
         </div>
         <div style="" class="row show-grid">
             <div class="col-xs-4">
                 <label for="parent" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_PARENT'); ?> &nbsp;</label>
             </div>
-            <div class="col-sm-4 col-xs-8">
+            <div class="col-xs-4">
                 <select id="parent" name="item[parent]" data-placeholder="Select" class="form-control" tabindex="-1">
                     <option value="0">None</option>
                     <?php
@@ -68,7 +79,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
             <div class="col-xs-4">
                 <label for="ordering" class="control-label pull-right"><?php echo $CI->lang->line('LABEL_ORDER'); ?> <span style="color:#FF0000">*</span></label>
             </div>
-            <div class="col-sm-4 col-xs-8">
+            <div class="col-xs-4">
                 <input type="text" name="item[ordering]" id="ordering" class="form-control" value="<?php echo $item['ordering'] ?>">
             </div>
         </div>
@@ -76,7 +87,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
             <div class="col-xs-4">
                 <label for="status" class="control-label pull-right"><?php echo $CI->lang->line('STATUS'); ?> <span style="color:#FF0000">*</span></label>
             </div>
-            <div class="col-sm-4 col-xs-8">
+            <div class="col-xs-4">
                 <select id="status" name="item[status]" class="form-control">
                     <option value="<?php echo $CI->config->item('system_status_active'); ?>" <?php echo ($item['status'] == $CI->config->item('system_status_active'))? 'selected':''; ?>><?php echo $CI->lang->line('ACTIVE') ?></option>
                     <option value="<?php echo $CI->config->item('system_status_inactive'); ?>" <?php echo ($item['status'] == $CI->config->item('system_status_inactive'))? 'selected':''; ?>><?php echo $CI->lang->line('INACTIVE') ?></option>
