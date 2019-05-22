@@ -16,7 +16,7 @@ class Setup_category extends Root_Controller
         $this->load->helper('category');
         $this->prefix_length = 3;
         // Extra Language
-        $this->lang->language['LABEL_PREFIX'] = 'Prefix';
+        $this->lang->language['LABEL_PREFIX'] = 'Category Prefix';
     }
 
     public function index($action = "list", $id = 0)
@@ -64,6 +64,7 @@ class Setup_category extends Root_Controller
                     $data['category_' . $i] = 1;
                 }
             }
+            $data['prefix'] = 1;
             $data['ordering'] = 1;
             $data['status'] = 1;
         }
@@ -129,6 +130,7 @@ class Setup_category extends Root_Controller
 
             $item = array(
                 'id' => $category['category'][$category_id]['id'],
+                'prefix' => $category['category'][$category_id]['prefix'],
                 'ordering' => $category['category'][$category_id]['ordering'],
                 'status' => $category['category'][$category_id]['status']
             );

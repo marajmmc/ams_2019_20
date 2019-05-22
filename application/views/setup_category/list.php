@@ -98,6 +98,9 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
             url: url,
             data: {max_parent_length: <?php echo $max_parent_length; ?> } // to determine number of Dynamic columns
         };
+        var tooltiprenderer = function (element) {
+            $(element).jqxTooltip({ position: 'mouse', content: $(element).text() });
+        };
         var dataAdapter = new $.jqx.dataAdapter(source);
         // create jqxgrid.
         $("#system_jqx_container").jqxGrid(
@@ -128,8 +131,9 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
                     $extra_attribute = "";
                     }
                     ?>
-                    { text: '<?php echo $CI->lang->line('LABEL_ORDER'); ?>', dataField: 'ordering', width: '80', cellsalign: 'right', hidden: <?php echo $system_preference_items['ordering']?0:1;?>},
-                    { text: '<?php echo $CI->lang->line('LABEL_STATUS');?>', dataField: 'status', cellsalign: 'center', filtertype: 'list', width: 100, hidden: <?php echo $system_preference_items['status']?0:1;?>}
+                    { text: '<?php echo $CI->lang->line('LABEL_PREFIX'); ?>', dataField: 'prefix', rendered: tooltiprenderer, width: '80', hidden: <?php echo $system_preference_items['prefix']?0:1;?>},
+                    { text: '<?php echo $CI->lang->line('LABEL_ORDER'); ?>', dataField: 'ordering', rendered: tooltiprenderer, width: '80', cellsalign: 'right', hidden: <?php echo $system_preference_items['ordering']?0:1;?>},
+                    { text: '<?php echo $CI->lang->line('LABEL_STATUS');?>', dataField: 'status', rendered: tooltiprenderer, cellsalign: 'center', filtertype: 'list', width: 100, hidden: <?php echo $system_preference_items['status']?0:1;?>}
                 ]
             });
     });
