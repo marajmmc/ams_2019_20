@@ -20,9 +20,9 @@ class Purchase_requisition_payment extends Root_Controller
     }
     private function language_labels()
     {
-        $this->lang->language['LABEL_DATE_REQUISITION']='Date';
+        //$this->lang->language['LABEL_DATE_REQUISITION']='Date';
         $this->lang->language['LABEL_CATEGORY_NAME']='Category';
-        $this->lang->language['LABEL_MODEL_NUMBER']='Asset Name';
+        //$this->lang->language['LABEL_MODEL_NUMBER']='Asset Name';
         $this->lang->language['LABEL_AMOUNT_PRICE_UNIT']='Unit Price';
         $this->lang->language['LABEL_AMOUNT_PRICE_TOTAL']='Total Price';
         $this->lang->language['LABEL_REASON']='Reason';
@@ -104,10 +104,9 @@ class Purchase_requisition_payment extends Root_Controller
         if($method=='list')
         {
             $data['id']= 1;
-            $data['date_requisition']= 1;
+            //$data['date_requisition']= 1;
             $data['supplier_name']= 1;
             $data['category_name']= 1;
-            $data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -118,10 +117,9 @@ class Purchase_requisition_payment extends Root_Controller
         else if($method=='list_all')
         {
             $data['id']= 1;
-            $data['date_requisition']= 1;
+            //$data['date_requisition']= 1;
             $data['supplier_name']= 1;
             $data['category_name']= 1;
-            $data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -203,10 +201,10 @@ class Purchase_requisition_payment extends Root_Controller
         //$this->db->where('item.status_payment_approve',$this->config->item('system_status_pending'));
         $this->db->order_by('item.id','DESC');
         $items=$this->db->get()->result_array();
-        foreach($items as &$item)
+        /*foreach($items as &$item)
         {
             $item['date_requisition']=System_helper::display_date($item['date_requisition']);
-        }
+        }*/
         $this->json_return($items);
     }
     private function system_list_all()
@@ -246,10 +244,10 @@ class Purchase_requisition_payment extends Root_Controller
         $this->db->where('item.status_approve',$this->config->item('system_status_approved'));
         $this->db->order_by('item.id','DESC');
         $items=$this->db->get()->result_array();
-        foreach($items as &$item)
+        /*foreach($items as &$item)
         {
             $item['date_requisition']=System_helper::display_date($item['date_requisition']);
-        }
+        }*/
         $this->json_return($items);
     }
     private function system_payment_approve($id)
@@ -431,14 +429,13 @@ class Purchase_requisition_payment extends Root_Controller
             }
             $data['info_basic']=Ams_helper::get_basic_info($result);
             $data['amount_total']=$result['amount_price_total'];
-            $data['model_number']=$result['model_number'];
 
             $result=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('SUM(amount) amount_total_paid'),array('purchase_order_id ='.$data['item_id'],'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
             $data['amount_total_paid']=$result['amount_total_paid']?$result['amount_total_paid']:0;
             $data['amount_total_due']=($data['amount_total']-$result['amount_total_paid']);
 
             $data['system_preference_items']= System_helper::get_preference($user->user_id, $this->controller_url, $method, $this->get_preference_headers($method));
-            $data['title']="Purchase Order ID: (".$data['item_id'].") Payment List :: Model/Serial/ID: ".$data['model_number'];
+            $data['title']="Purchase Order ID: (".$data['item_id'].") Payment List ";
             $ajax['status']=true;
             $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/list_payment",$data,true));
             if($this->message)
@@ -495,7 +492,7 @@ class Purchase_requisition_payment extends Root_Controller
             }
             $data['info_basic']=Ams_helper::get_basic_info($result);
             $data['amount_total']=$result['amount_price_total'];
-            $data['model_number']=$result['model_number'];
+            //$data['model_number']=$result['model_number'];
 
             $result=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('SUM(amount) amount_total_paid'),array('purchase_order_id ='.$id,'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
             $data['amount_total_paid']=$result['amount_total_paid']?$result['amount_total_paid']:0;
@@ -555,7 +552,7 @@ class Purchase_requisition_payment extends Root_Controller
                 $this->json_return($ajax);
             }
             $data['amount_total']=$result['amount_price_total'];
-            $data['model_number']=$result['model_number'];
+            //$data['model_number']=$result['model_number'];
 
             $result=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('SUM(amount) amount_total_paid'),array('purchase_order_id ='.$data['item']['item_id'],'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
             $data['amount_total_paid']=$result['amount_total_paid']?$result['amount_total_paid']:0;

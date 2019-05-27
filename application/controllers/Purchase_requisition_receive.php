@@ -20,9 +20,9 @@ class Purchase_requisition_receive extends Root_Controller
     }
     private function language_labels()
     {
-        $this->lang->language['LABEL_DATE_REQUISITION']='Date';
+        //$this->lang->language['LABEL_DATE_REQUISITION']='Date';
         $this->lang->language['LABEL_CATEGORY_NAME']='Category';
-        $this->lang->language['LABEL_MODEL_NUMBER']='Asset Name';
+        //$this->lang->language['LABEL_MODEL_NUMBER']='Asset Name';
         $this->lang->language['LABEL_AMOUNT_PRICE_UNIT']='Unit Price';
         $this->lang->language['LABEL_AMOUNT_PRICE_TOTAL']='Total Price';
         $this->lang->language['LABEL_REASON']='Reason';
@@ -81,10 +81,10 @@ class Purchase_requisition_receive extends Root_Controller
         if($method=='list')
         {
             $data['id']= 1;
-            $data['date_requisition']= 1;
+            //$data['date_requisition']= 1;
             $data['supplier_name']= 1;
             $data['category_name']= 1;
-            $data['model_number']= 1;
+            //$data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -96,10 +96,10 @@ class Purchase_requisition_receive extends Root_Controller
         else if($method=='list_all')
         {
             $data['id']= 1;
-            $data['date_requisition']= 1;
+            //$data['date_requisition']= 1;
             $data['supplier_name']= 1;
             $data['category_name']= 1;
-            $data['model_number']= 1;
+            //$data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -174,10 +174,10 @@ class Purchase_requisition_receive extends Root_Controller
         $this->db->where('item.status_receive',$this->config->item('system_status_pending'));
         $this->db->order_by('item.id','DESC');
         $items=$this->db->get()->result_array();
-        foreach($items as &$item)
+        /*foreach($items as &$item)
         {
             $item['date_requisition']=System_helper::display_date($item['date_requisition']);
-        }
+        }*/
         $this->json_return($items);
     }
     private function system_list_all()
@@ -217,10 +217,10 @@ class Purchase_requisition_receive extends Root_Controller
         $this->db->where('item.status_approve',$this->config->item('system_status_approved'));
         $this->db->order_by('item.id','DESC');
         $items=$this->db->get()->result_array();
-        foreach($items as &$item)
+        /*foreach($items as &$item)
         {
             $item['date_requisition']=System_helper::display_date($item['date_requisition']);
-        }
+        }*/
         $this->json_return($items);
     }
     private function system_receive($id)

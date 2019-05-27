@@ -274,7 +274,7 @@ class Purchase_requisition_request extends Root_Controller
             $data['title']="Create New Requisition";
             $data['item']['id']=0;
             $data['item']['user_responsible_group_id']='';
-            $data['item']['date_requisition']=time();
+            //$data['item']['date_requisition']=time();
             $data['item']['supplier_id']='';
             $data['item']['quantity_total']=1;
             $data['item']['amount_price_unit']='';
@@ -454,7 +454,7 @@ class Purchase_requisition_request extends Root_Controller
         if($id>0)
         {
             //$data=array();
-            $item_head['date_requisition']=System_helper::get_time($item_head['date_requisition']);
+            //$item_head['date_requisition']=System_helper::get_time($item_head['date_requisition']);
             $item_head['category_id']=$category_id;
             $item_head['amount_price_total']=($item_head['quantity_total']*$item_head['amount_price_unit']);
             $item_head['date_updated'] = $time;
@@ -464,7 +464,7 @@ class Purchase_requisition_request extends Root_Controller
         }
         else
         {
-            $item_head['date_requisition']=System_helper::get_time($item_head['date_requisition']);
+            //$item_head['date_requisition']=System_helper::get_time($item_head['date_requisition']);
             $item_head['category_id']=$category_id;
             $item_head['amount_price_total']=($item_head['quantity_total']*$item_head['amount_price_unit']);
             $item_head['date_created']=$time;

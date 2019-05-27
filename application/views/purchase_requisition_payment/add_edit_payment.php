@@ -42,7 +42,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         echo $CI->load->view("info_basic", $data=array(), true);
         ?>
         <div class="row">
-            <div class="col-xs-3">
+            <div class="col-xs-6">
                 <button type="button" class="btn btn-success btn-xs">Total Amount: <?php echo System_helper::get_string_amount($amount_total);?></button>
                 <button type="button" class="btn btn-warning btn-xs">Paid Amount: <?php echo System_helper::get_string_amount($amount_total_paid);?></button>
                 <button type="button" class="btn btn-danger btn-xs">Due Amount: <?php echo System_helper::get_string_amount($amount_total_due);?></button>

@@ -20,10 +20,10 @@ class Purchase_requisition_approve extends Root_Controller
     }
     private function language_labels()
     {
-        $this->lang->language['LABEL_DATE_REQUISITION']='Date';
+        //$this->lang->language['LABEL_DATE_REQUISITION']='Date';
         $this->lang->language['LABEL_CATEGORY_NAME']='Category';
         $this->lang->language['LABEL_USER_NAME']='Employee Name';
-        $this->lang->language['LABEL_MODEL_NUMBER']='Asset Name';
+        //$this->lang->language['LABEL_MODEL_NUMBER']='Asset Name';
         $this->lang->language['LABEL_AMOUNT_PRICE_UNIT']='Unit Price';
         $this->lang->language['LABEL_AMOUNT_PRICE_TOTAL']='Total Price';
         $this->lang->language['LABEL_REASON']='Reason';
@@ -86,10 +86,10 @@ class Purchase_requisition_approve extends Root_Controller
         if($method=='list')
         {
             $data['id']= 1;
-            $data['date_requisition']= 1;
+            //$data['date_requisition']= 1;
             $data['supplier_name']= 1;
             $data['category_name']= 1;
-            $data['model_number']= 1;
+            //$data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -101,10 +101,10 @@ class Purchase_requisition_approve extends Root_Controller
         else if($method=='list_all')
         {
             $data['id']= 1;
-            $data['date_requisition']= 1;
+            //$data['date_requisition']= 1;
             $data['supplier_name']= 1;
             $data['category_name']= 1;
-            $data['model_number']= 1;
+            //$data['model_number']= 1;
             $data['quantity_total']= 1;
             $data['amount_price_unit']= 1;
             $data['amount_price_total']= 1;
@@ -197,10 +197,10 @@ class Purchase_requisition_approve extends Root_Controller
             $this->db->where_in('designation.id', $designation_child_ids);
         }
         $items=$this->db->get()->result_array();
-        foreach($items as &$item)
+        /*foreach($items as &$item)
         {
             $item['date_requisition']=System_helper::display_date($item['date_requisition']);
-        }
+        }*/
         $this->json_return($items);
     }
     private function system_list_all()
@@ -257,10 +257,10 @@ class Purchase_requisition_approve extends Root_Controller
             $this->db->where_in('designation.id', $designation_child_ids);
         }
         $items=$this->db->get()->result_array();
-        foreach($items as &$item)
+        /*foreach($items as &$item)
         {
             $item['date_requisition']=System_helper::display_date($item['date_requisition']);
-        }
+        }*/
         $this->json_return($items);
     }
     private function system_details($id)
@@ -357,19 +357,19 @@ class Purchase_requisition_approve extends Root_Controller
             if($data['item']['status_forward']==$this->config->item('system_status_pending'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Purchase Order already forwarded.';
+                $ajax['system_message']='Purchase order not forwarded.';
                 $this->json_return($ajax);
             }
             if($data['item']['status_approve']==$this->config->item('system_status_rejected'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Purchase Order already rejected.';
+                $ajax['system_message']='Purchase order already rejected.';
                 $this->json_return($ajax);
             }
             if($data['item']['status_approve']==$this->config->item('system_status_approved'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Purchase Order already approve.';
+                $ajax['system_message']='Purchase order already approved.';
                 $this->json_return($ajax);
             }
             $data['categories']=$this->get_categories();
@@ -463,7 +463,9 @@ class Purchase_requisition_approve extends Root_Controller
         $data=array();
         if($item_head['status_approve']==$this->config->item('system_status_rollback'))
         {
-            $data['remarks_approve']=$item_head['remarks_approve'];
+            $data['date_rollback']=$time;
+            $data['user_rollback']=$user->user_id;
+            $data['remarks_rollback']=$item_head['remarks_approve'];
             $data['status_forward']=$this->config->item('system_status_pending');
             $this->db->set('revision_count_rollback', 'revision_count_rollback+1', FALSE);
         }

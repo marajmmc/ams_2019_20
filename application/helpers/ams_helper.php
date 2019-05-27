@@ -21,14 +21,18 @@ class Ams_helper
         {
             $user_ids[$result['user_approved']]=$result['user_approved'];
         }
+        if($result['user_rollback']>0)
+        {
+            $user_ids[$result['user_rollback']]=$result['user_rollback'];
+        }
         $user_info = System_helper::get_users_info($user_ids);
 
         //---------------- Basic Info ----------------
         $data = array();
         $data[] = array
         (
-            'label_1' => $CI->lang->line('LABEL_DATE'),
-            'value_1' => System_helper::display_date($result['date_requisition']),
+            'label_1' => 'Purchase Order ID',
+            'value_1' => $result['id'],
             'label_2' => 'Revision (Edit)',
             'value_2' => $result['revision_count_request'],
         );
@@ -81,10 +85,10 @@ class Ams_helper
         {
             $label_approve='Reject';
         }
-        else if($result['status_approve']==$CI->config->item('system_status_rollback'))
+        /*else if($result['status_approve']==$CI->config->item('system_status_rollback'))
         {
             $label_approve=$CI->config->item('system_status_approved');
-        }
+        }*/
         else
         {
             $label_approve=$CI->config->item('system_status_approved');
@@ -101,14 +105,14 @@ class Ams_helper
             $data[] = array
             (
                 'label_1' => $label_approve.' By',
-                'value_1' => $user_info[$result['user_approved']]['name'] . ' ( ' . $user_info[$result['user_approved']]['employee_id'] . ' )',
+                'value_1' => $user_info[$result['user_rollback']]['name'] . ' ( ' . $user_info[$result['user_rollback']]['employee_id'] . ' )',
                 'label_2' => $label_approve.' Time',
-                'value_2' => System_helper::display_date_time($result['date_approved'])
+                'value_2' => System_helper::display_date_time($result['date_rollback'])
             );
             $data[] = array
             (
                 'label_1' => $label_approve.' Remarks',
-                'value_1' => $result['remarks_approve']
+                'value_1' => nl2br($result['remarks_approve'])
             );
         }
         if($result['revision_count_rollback']>0)
@@ -116,7 +120,16 @@ class Ams_helper
             $data[] = array
             (
                 'label_1' => 'Revision (Rollback)',
-                'value_1' => $result['revision_count_rollback']
+                'value_1' => $result['revision_count_rollback'],
+                'label_2' => 'Remarks (Last Rollback)',
+                'value_2' => nl2br($result['remarks_rollback'])
+            );
+            $data[] = array
+            (
+                'label_1' => 'Updated By (Last Rollback)',
+                'value_1' => $user_info[$result['user_created']]['name'] . ' ( ' . $user_info[$result['user_created']]['employee_id'] . ' )',
+                'label_2' => 'Updated Time (Last Rollback)',
+                'value_2' => System_helper::display_date_time($result['date_created'])
             );
         }
         return $data;

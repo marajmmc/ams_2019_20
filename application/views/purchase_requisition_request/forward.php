@@ -57,10 +57,10 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             <?php
             }
             ?>
-            <tr>
-                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_DATE');?></label></td>
-                <td><?php echo System_helper::display_date($item['date_requisition']);?></td>
-            </tr>
+            <!--<tr>
+                <td><label class="control-label pull-right"><?php /*echo $CI->lang->line('LABEL_DATE');*/?></label></td>
+                <td><?php /*echo System_helper::display_date($item['date_requisition']);*/?></td>
+            </tr>-->
             <tr>
                 <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_SUPPLIER_NAME');?></label></td>
                 <td><?php echo $item['supplier_name'];?></td>

@@ -90,7 +90,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <?php
                  foreach($system_preference_items as $key=>$item)
                  {
-                   if(($key=='id') || ($key=='quantity_total') || ($key=='revision_count_request') )
+                   if(($key=='id') || ($key=='quantity_total') || ($key=='amount_price_unit') || ($key=='amount_price_total') || ($key=='revision_count_request') )
                     {
                         ?>
                         { name: '<?php echo $key ?>', type: 'number' },
@@ -148,10 +148,10 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 columns:
                     [
                         { text: '<?php echo $CI->lang->line('LABEL_ID'); ?>', dataField: 'id',width:'50',cellsAlign:'right',hidden: <?php echo $system_preference_items['id']?0:1;?>},
-                        { text: '<?php echo $CI->lang->line('LABEL_DATE'); ?>', dataField: 'date_requisition',width:'100', hidden: <?php echo $system_preference_items['date_requisition']?0:1;?>},
+                        /*{ text: '<?php echo $CI->lang->line('LABEL_DATE'); ?>', dataField: 'date_requisition',width:'100', hidden: <?php echo $system_preference_items['date_requisition']?0:1;?>},*/
                         { text: '<?php echo $CI->lang->line('LABEL_SUPPLIER_NAME'); ?>', dataField: 'supplier_name',filtertype: 'list',width:'200', hidden: <?php echo $system_preference_items['supplier_name']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_CATEGORY_NAME'); ?>', dataField: 'category_name',filtertype: 'list',width:'200', hidden: <?php echo $system_preference_items['category_name']?0:1;?>},
-                        { text: '<?php echo $CI->lang->line('LABEL_MODEL_NUMBER'); ?>', dataField: 'model_number',width:'100', hidden: <?php echo $system_preference_items['model_number']?0:1;?>},
+                        /*{ text: '<?php echo $CI->lang->line('LABEL_MODEL_NUMBER'); ?>', dataField: 'model_number',width:'100', hidden: <?php echo $system_preference_items['model_number']?0:1;?>},*/
                         { text: '<?php echo $CI->lang->line('LABEL_QUANTITY_TOTAL'); ?>', dataField: 'quantity_total',width:'80',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['quantity_total']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_AMOUNT_PRICE_UNIT'); ?>', dataField: 'amount_price_unit',width:'80',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['amount_price_unit']?0:1;?>},
                         { text: '<?php echo $CI->lang->line('LABEL_AMOUNT_PRICE_TOTAL'); ?>', dataField: 'amount_price_total',width:'80',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['amount_price_total']?0:1;?>},

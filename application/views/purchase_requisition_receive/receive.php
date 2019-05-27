@@ -57,18 +57,18 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             <?php
             }
             ?>
-            <tr>
-                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_DATE');?></label></td>
-                <td><?php echo System_helper::display_date($item['date_requisition']);?></td>
-            </tr>
+            <!--<tr>
+                <td><label class="control-label pull-right"><?php /*echo $CI->lang->line('LABEL_DATE');*/?></label></td>
+                <td><?php /*echo System_helper::display_date($item['date_requisition']);*/?></td>
+            </tr>-->
             <tr>
                 <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_SUPPLIER_NAME');?></label></td>
                 <td><?php echo $item['supplier_name'];?></td>
             </tr>
-            <tr>
-                <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_MODEL_NUMBER');?></label></td>
-                <td><?php echo $item['model_number'];?></td>
-            </tr>
+            <!--<tr>
+                <td><label class="control-label pull-right"><?php /*echo $CI->lang->line('LABEL_MODEL_NUMBER');*/?></label></td>
+                <td><?php /*echo $item['model_number'];*/?></td>
+            </tr>-->
             <tr>
                 <td><label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_QUANTITY_TOTAL');?></label></td>
                 <td><?php echo System_helper::get_string_quantity($item['quantity_total']);?></td>
@@ -96,56 +96,39 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             </tbody>
         </table>
         <hr/>
-        <?php
-        $serial=0;
-        for($i=0; $i<$item['quantity_total'];$i++)
-        {
+        <table class="table table-bordered table-responsive system_table_details_view">
+            <thead>
+            <tr>
+                <th>Auto ID</th>
+                <th>Serial No</th>
+                <th>Warranty Date Start</th>
+                <th>Warranty Date End</th>
+                <th>Depreciation Rate</th>
+                <th>Depreciation Year</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php
+            $serial=0;
+            for($i=0; $i<$item['quantity_total'];$i++)
+            {
             ++$serial;
             ?>
-            <div class="row show-grid">
-                <div class="col-xs-4">
-                    <label class="control-label pull-right"><?php echo $serial?>. Serial No/ID <span style="color:#FF0000">*</span></label>
-                </div>
-                <div class="col-sm-4 col-xs-8">
-                    <input type="text" id="items[]" name="items[]" class="form-control" value=""/>
-                </div>
-            </div>
-        <?php
-        }
-        ?>
-        <div class="row show-grid">
-            <div class="col-xs-4">
-                <label class="control-label pull-right">Warranty Date Start</label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[date_warranty_start]" id="date_warranty_start" class="form-control datepicker" readonly>
-            </div>
-        </div>
-        <div class="row show-grid">
-            <div class="col-xs-4">
-                <label class="control-label pull-right">Warranty Date Start</label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[date_warranty_end]" id="date_warranty_end" class="form-control datepicker" readonly>
-            </div>
-        </div>
-        <div class="row show-grid">
-            <div class="col-xs-4">
-                <label class="control-label pull-right">Depreciation Rate</label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[depreciation_rate]" id="depreciation_rate" class="form-control float_type_positive" >
-            </div>
-        </div>
-        <div class="row show-grid">
-            <div class="col-xs-4">
-                <label class="control-label pull-right">Depreciation Year</label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[depreciation_year]" id="depreciation_year" class="form-control float_type_positive" >
-            </div>
-        </div>
-
+                <tr>
+                    <td><?php echo $serial?></td>
+                    <td><input type="text" id="items[]" name="items[]" class="form-control" value=""/></td>
+                    <td><input type="text" name="item[date_warranty_start]" id="date_warranty_start" class="form-control datepicker" readonly></td>
+                    <td><input type="text" name="item[date_warranty_end]" id="date_warranty_end" class="form-control datepicker" readonly></td>
+                    <td><input type="text" name="item[depreciation_rate]" id="depreciation_rate" class="form-control float_type_positive" ></td>
+                    <td><input type="text" name="item[depreciation_year]" id="depreciation_year" class="form-control float_type_positive" value="2" ></td>
+                    <td></td>
+                </tr>
+            <?php
+            }
+            ?>
+            </tbody>
+        </table>
+        <hr/>
         <div class="row show-grid">
             <div class="col-xs-4">
                 <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_REMARKS');?> </label>
