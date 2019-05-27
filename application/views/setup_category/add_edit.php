@@ -54,7 +54,7 @@ $CI->load->view('action_buttons', array('action_buttons' => $action_buttons));
                 <input type="text" name="item[prefix]" id="prefix" class="form-control" maxlength="<?php echo $CI->prefix_length; ?>" value="<?php echo $item['prefix']; ?>"/>
             </div>
             <div class="col-xs-3" style="padding-left:0">
-                <label class="control-label" style="font-weight:normal;margin-top:5px"><span style="color:#FF0000">( Must be 3 characters &amp; alphabetic )</span></label>
+                <label class="control-label" style="font-weight:normal;margin-top:5px"><span style="color:#FF0000">( Must be <?php echo $CI->prefix_length; ?> characters &amp; alphabetic )</span></label>
             </div>
         </div>
         <div style="" class="row show-grid">

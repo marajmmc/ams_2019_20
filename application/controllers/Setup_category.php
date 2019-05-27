@@ -16,7 +16,7 @@ class Setup_category extends Root_Controller
         $this->load->helper('category');
         $this->prefix_length = 3;
         // Extra Language
-        $this->lang->language['LABEL_PREFIX'] = 'Category Prefix';
+        $this->lang->language['LABEL_PREFIX'] = 'Prefix';
     }
 
     public function index($action = "list", $id = 0)
@@ -64,7 +64,6 @@ class Setup_category extends Root_Controller
                     $data['category_' . $i] = 1;
                 }
             }
-            $data['prefix'] = 1;
             $data['ordering'] = 1;
             $data['status'] = 1;
         }
@@ -130,15 +129,16 @@ class Setup_category extends Root_Controller
 
             $item = array(
                 'id' => $category['category'][$category_id]['id'],
-                'prefix' => $category['category'][$category_id]['prefix'],
                 'ordering' => $category['category'][$category_id]['ordering'],
                 'status' => $category['category'][$category_id]['status']
             );
             for ($i = $length; $i >= 0; $i--)
             {
-                $item['category_' . ($index++)] = $category['category'][$parent_ids[$i]]['name'];
+                $prefix = ($category['category'][$parent_ids[$i]]['prefix']) ? ' (' . $category['category'][$parent_ids[$i]]['prefix'] . ')' : '';
+                $item['category_' . ($index++)] = $category['category'][$parent_ids[$i]]['name']. $prefix;
             }
-            $item['category_' . ($index++)] = $category['category'][$category_id]['name'];
+            $prefix = ($category['category'][$category_id]['prefix']) ? ' (' . $category['category'][$category_id]['prefix'] . ')' : '';
+            $item['category_' . ($index++)] = $category['category'][$category_id]['name'] . $prefix;
 
             while ($index <= $max_parent_length)
             {
@@ -317,6 +317,7 @@ class Setup_category extends Root_Controller
                 $data['categories'][] = array(
                     'id' => $result['id'],
                     'name' => $result['name'],
+                    'prefix' => $result['prefix'],
                     'ordering' => $result['ordering'],
                     'parent' => ($result['parent'] > 0) ? $result['parent'] : '',
                     'status' => ($result['status'] == $this->config->item('system_status_inactive')) ? '<br/><span>(' . $result['status'] . ')<span>' : ''
@@ -345,7 +346,7 @@ class Setup_category extends Root_Controller
     {
         $this->load->library('form_validation');
         $this->form_validation->set_rules('item[name]', $this->lang->line('LABEL_NAME'), 'required|trim');
-        $this->form_validation->set_rules('item[prefix]', $this->lang->line('LABEL_PREFIX'), 'required|trim|alpha|exact_length['.$this->prefix_length.']');
+        $this->form_validation->set_rules('item[prefix]', $this->lang->line('LABEL_PREFIX'), 'required|trim|alpha|exact_length[' . $this->prefix_length . ']');
         $this->form_validation->set_rules('item[ordering]', $this->lang->line('LABEL_ORDER'), 'required');
         $this->form_validation->set_rules('item[status]', $this->lang->line('LABEL_STATUS'), 'required');
         if ($this->form_validation->run() == FALSE)
