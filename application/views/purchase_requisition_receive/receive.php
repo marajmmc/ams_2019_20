@@ -14,6 +14,7 @@ $action_buttons[]=array(
     'data-form'=>'#save_form'
 );
 $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
+
 ?>
 <form id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save_receive');?>" method="post">
     <input type="hidden" id="id" name="id" value="<?php echo $item['id']?>" />
@@ -99,35 +100,92 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         <table class="table table-bordered table-responsive system_table_details_view">
             <thead>
             <tr>
-                <th>Auto ID</th>
+                <th>Barcode <small>(Auto Generated)</small></th>
                 <th>Serial No</th>
-                <th>Warranty Date Start</th>
-                <th>Warranty Date End</th>
-                <th>Depreciation Rate</th>
-                <th>Depreciation Year</th>
+                <th>Receive/Pending</th>
             </tr>
             </thead>
             <tbody>
             <?php
-            $serial=0;
-            for($i=0; $i<$item['quantity_total'];$i++)
+            if(sizeof($assets)>0)
             {
-            ++$serial;
-            ?>
-                <tr>
-                    <td><?php echo $serial?></td>
-                    <td><input type="text" id="items[]" name="items[]" class="form-control" value=""/></td>
-                    <td><input type="text" name="item[date_warranty_start]" id="date_warranty_start" class="form-control datepicker" readonly></td>
-                    <td><input type="text" name="item[date_warranty_end]" id="date_warranty_end" class="form-control datepicker" readonly></td>
-                    <td><input type="text" name="item[depreciation_rate]" id="depreciation_rate" class="form-control float_type_positive" ></td>
-                    <td><input type="text" name="item[depreciation_year]" id="depreciation_year" class="form-control float_type_positive" value="2" ></td>
-                    <td></td>
-                </tr>
-            <?php
+                foreach($assets as $asset)
+                {
+                    ?>
+                    <tr>
+                        <td><?php echo Barcode_helper::get_barcode_asset($item['prefix'], $asset['barcode'])?></td>
+                        <td><?php echo $asset['serial_no']?></td>
+                        <td></td>
+                    </tr>
+                <?php
+                }
+                for($i=0; $i<($item['quantity_total']-sizeof($assets));$i++)
+                {
+                    ?>
+                    <tr>
+                        <td></td>
+                        <td><input type="text" id="items[]" name="items[]" class="form-control" value=""/></td>
+                        <td>
+                            <input type="radio" name="items[receive]" value="1" /> Receive
+                            <input type="radio" name="items[receive]" value="99" checked="true" /> Pending
+                        </td>
+                    </tr>
+                <?php
+                }
+            }
+            else
+            {
+                $serial=0;
+                for($i=0; $i<$item['quantity_total'];$i++)
+                {
+                    ++$serial;
+                    ?>
+                    <tr>
+                        <td></td>
+                        <td><input type="text" id="items[]" name="items[]" class="form-control" value=""/></td>
+                        <td>
+                            <input type="radio" name="items[receive]" value="1" /> Receive
+                            <input type="radio" name="items[receive]" value="99" checked="true" /> Pending
+                        </td>
+                    </tr>
+                <?php
+                }
             }
             ?>
             </tbody>
         </table>
+        <div class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right">Warranty Date Start</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <input type="text" name="item[date_warranty_start]" id="date_warranty_start" class="form-control datepicker" readonly>
+            </div>
+        </div>
+        <div class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right">Warranty Date Start</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <input type="text" name="item[date_warranty_end]" id="date_warranty_end" class="form-control datepicker" readonly>
+            </div>
+        </div>
+        <div class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right">Depreciation Rate</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <input type="text" name="item[depreciation_rate]" id="depreciation_rate" class="form-control float_type_positive" >
+            </div>
+        </div>
+        <div class="row show-grid">
+            <div class="col-xs-4">
+                <label class="control-label pull-right">Depreciation Year</label>
+            </div>
+            <div class="col-sm-4 col-xs-8">
+                <input type="text" name="item[depreciation_year]" id="depreciation_year" class="form-control float_type_positive" >
+            </div>
+        </div>
         <hr/>
         <div class="row show-grid">
             <div class="col-xs-4">

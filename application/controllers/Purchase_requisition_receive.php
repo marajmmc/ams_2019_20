@@ -236,9 +236,10 @@ class Purchase_requisition_receive extends Root_Controller
                 $item_id=$this->input->post('id');
             }
 
-            //$data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id, 'status!="'.$this->config->item('system_status_delete').'"'),1,0,array('id ASC'));
+            $data['assets']=Query_helper::get_info($this->config->item('table_ams_assets'),array('*'),array('purchase_order_id ='.$item_id, 'status!="'.$this->config->item('system_status_delete').'"'));
+
             $this->db->from($this->config->item('table_ams_requisition_request').' item');
-            $this->db->select('item.*, category.name category_name');
+            $this->db->select('item.*, category.name category_name, category.prefix');
 
             $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
             $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
@@ -353,7 +354,7 @@ class Purchase_requisition_receive extends Root_Controller
         {
             $data=array();
             $data['purchase_order_id']=$id;
-            $data['serial_id']=$items[$i];
+            $data['serial_no']=$items[$i];
             $data['date_created']=$time;
             $data['user_created']=$user->user_id;
             Query_helper::add($this->config->item('table_ams_assets'),$data, false);
