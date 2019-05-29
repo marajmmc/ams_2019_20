@@ -124,10 +124,10 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     ?>
                     <tr>
                         <td></td>
-                        <td><input type="text" id="items[]" name="items[]" class="form-control" value=""/></td>
+                        <td><input type="text" name="items[<?php echo $i;?>][serial_no]" class="form-control" value=""/></td>
                         <td>
-                            <input type="radio" name="items[receive]" value="1" /> Receive
-                            <input type="radio" name="items[receive]" value="99" checked="true" /> Pending
+                            <input type="radio" name="items[<?php echo $i;?>][receive]" value="1" /> Receive
+                            <input type="radio" name="items[<?php echo $i;?>][receive]" value="99" checked="true" /> Pending
                         </td>
                     </tr>
                 <?php
@@ -135,17 +135,15 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             }
             else
             {
-                $serial=0;
                 for($i=0; $i<$item['quantity_total'];$i++)
                 {
-                    ++$serial;
                     ?>
                     <tr>
                         <td></td>
-                        <td><input type="text" id="items[]" name="items[]" class="form-control" value=""/></td>
+                        <td><input type="text" name="items[<?php echo $i;?>][serial_no]" class="form-control" value=""/></td>
                         <td>
-                            <input type="radio" name="items[receive]" value="1" /> Receive
-                            <input type="radio" name="items[receive]" value="99" checked="true" /> Pending
+                            <input type="radio" name="items[<?php echo $i;?>][receive]" value="1" /> Receive
+                            <input type="radio" name="items[<?php echo $i;?>][receive]" value="99" checked="true" /> Pending
                         </td>
                     </tr>
                 <?php
@@ -159,7 +157,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right">Warranty Date Start</label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[date_warranty_start]" id="date_warranty_start" class="form-control datepicker" readonly>
+                <input type="text" name="item[date_warranty_start]" id="date_warranty_start" value="<?php echo System_helper::display_date($item['date_warranty_start'])?>" class="form-control datepicker" readonly>
             </div>
         </div>
         <div class="row show-grid">
@@ -167,7 +165,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right">Warranty Date Start</label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[date_warranty_end]" id="date_warranty_end" class="form-control datepicker" readonly>
+                <input type="text" name="item[date_warranty_end]" id="date_warranty_end" value="<?php echo System_helper::display_date($item['date_warranty_end'])?>" class="form-control datepicker" readonly>
             </div>
         </div>
         <div class="row show-grid">
@@ -175,7 +173,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right">Depreciation Rate</label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[depreciation_rate]" id="depreciation_rate" class="form-control float_type_positive" >
+                <input type="text" name="item[depreciation_rate]" id="depreciation_rate" value="<?php echo $item['depreciation_rate']?>" class="form-control float_type_positive" >
             </div>
         </div>
         <div class="row show-grid">
@@ -183,7 +181,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right">Depreciation Year</label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <input type="text" name="item[depreciation_year]" id="depreciation_year" class="form-control float_type_positive" >
+                <input type="text" name="item[depreciation_year]" id="depreciation_year" value="<?php echo $item['depreciation_year']?>" class="form-control float_type_positive" >
             </div>
         </div>
         <hr/>
@@ -192,7 +190,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_REMARKS');?> </label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <textarea name="item[remarks_receive]" id="remarks_receive" class="form-control"></textarea>
+                <textarea name="item[remarks_receive]" id="remarks_receive" class="form-control"><?php echo $item['remarks_receive']?></textarea>
             </div>
         </div>
         <div class="row show-grid">
@@ -201,7 +199,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             </div>
             <div class="col-sm-4 col-xs-8">
                 <select id="status_receive" class="form-control" name="item[status_receive]">
-                    <option value=""><?php echo $CI->lang->line('SELECT');?></option>
+                    <option value="<?php echo $this->config->item('system_status_pending')?>"><?php echo $this->config->item('system_status_pending')?></option>
                     <option value="<?php echo $this->config->item('system_status_received')?>"><?php echo $this->config->item('system_status_received')?></option>
                 </select>
             </div>
@@ -212,7 +210,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             </div>
             <div class="col-sm-4 col-xs-4">
                 <div class="action_button pull-right">
-                    <button id="button_action_save" type="button" class="btn" data-form="#save_form" data-message-confirm="Are You Sure Purchase Order Receive?">Save</button>
+                    <button id="button_action_save" type="button" class="btn" data-form="#save_form" data-message-confirm="Are You Sure Purchase Order Pending?">Save</button>
                 </div>
             </div>
             <div class="col-sm-4 col-xs-4">
@@ -228,7 +226,10 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         system_off_events();
         system_preset({controller:'<?php echo $CI->router->class; ?>'});
         $(".datepicker").datepicker({dateFormat : display_date_format});
-
+        $("#status_receive").on('change', function()
+        {
+            $("#button_action_save").attr('data-message-confirm','Are You Sure Purchase Order '+$(this).val()+'?');
+        })
     });
 </script>
 

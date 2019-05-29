@@ -100,7 +100,7 @@ class Ams_helper
             'label_2' => 'Revision ('.$label_approve.')',
             'value_2' => $result['revision_count_approved'],
         );
-        if($result['status_approve']!=$CI->config->item('system_status_pending'))
+        /*if($result['status_approve']!=$CI->config->item('system_status_pending'))
         {
             $data[] = array
             (
@@ -114,7 +114,7 @@ class Ams_helper
                 'label_1' => $label_approve.' Remarks',
                 'value_1' => nl2br($result['remarks_approve'])
             );
-        }
+        }*/
         if($result['revision_count_rollback']>0)
         {
             $data[] = array

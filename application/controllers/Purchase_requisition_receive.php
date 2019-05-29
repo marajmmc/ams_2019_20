@@ -300,6 +300,7 @@ class Purchase_requisition_receive extends Root_Controller
         $time=time();
         $item_head=$this->input->post('item');
         $items=$this->input->post('items');
+
         if($id>0)
         {
             if(!((isset($this->permissions['action7']) && ($this->permissions['action7']==1))))
@@ -308,12 +309,12 @@ class Purchase_requisition_receive extends Root_Controller
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->json_return($ajax);
             }
-            if($item_head['status_receive']!=$this->config->item('system_status_received'))
+            /*if($item_head['status_receive']!=$this->config->item('system_status_received'))
             {
                 $ajax['status']=false;
                 $ajax['system_message']='Receive Field is required.';
                 $this->json_return($ajax);
-            }
+            }*/
         }
         else
         {
@@ -321,7 +322,7 @@ class Purchase_requisition_receive extends Root_Controller
             $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
             $this->json_return($ajax);
         }
-        $status_empty=false;
+        /*$status_empty=false;
         if(sizeof($items)>0)
         {
             for($i=0; $i<sizeof($items); $i++)
@@ -338,7 +339,7 @@ class Purchase_requisition_receive extends Root_Controller
             $ajax['status']=false;
             $ajax['system_message']='Serial No/ID field is required.';
             $this->json_return($ajax);
-        }
+        }*/
         $this->db->trans_start();  //DB Transaction Handle START
 
         $data=array();
@@ -347,17 +348,26 @@ class Purchase_requisition_receive extends Root_Controller
         $data['user_received']=$user->user_id;
         $data['date_warranty_start']=System_helper::get_time($item_head['date_warranty_start']);
         $data['date_warranty_end']=System_helper::get_time($item_head['date_warranty_end']);
+        $data['depreciation_rate']=$item_head['depreciation_rate'];
+        $data['depreciation_year']=$item_head['depreciation_year'];
+        $data['remarks_receive']=$item_head['remarks_receive'];
         $data['status_receive']=$item_head['status_receive'];
         Query_helper::update($this->config->item('table_ams_requisition_request'),$data,array('id='.$id));
 
         for($i=0; $i<sizeof($items); $i++)
         {
-            $data=array();
-            $data['purchase_order_id']=$id;
-            $data['serial_no']=$items[$i];
-            $data['date_created']=$time;
-            $data['user_created']=$user->user_id;
-            Query_helper::add($this->config->item('table_ams_assets'),$data, false);
+            if($items[$i]['receive']==1)
+            {
+                $result=Query_helper::get_info($this->config->item('table_ams_assets'),array('MAX(ams_assets.barcode) as number_max'),array('purchase_order_id ='.$id),1);
+
+                $data=array();
+                $data['purchase_order_id']=$id;
+                $data['barcode']=$result['number_max']+1;
+                $data['serial_no']=$items[$i]['serial_no'];
+                $data['date_created']=$time;
+                $data['user_created']=$user->user_id;
+                Query_helper::add($this->config->item('table_ams_assets'),$data, false);
+            }
         }
 
         $this->db->trans_complete();   //DB Transaction Handle END
