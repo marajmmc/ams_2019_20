@@ -294,7 +294,7 @@ class Purchase_requisition_approve extends Root_Controller
                 $this->json_return($ajax);
             }
 
-            $data['categories']=$this->get_categories();
+            $data['categories']=Ams_helper::get_categories();
             $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
             $this->db->from($this->config->item('table_ams_requisition_file').' item');
@@ -372,7 +372,7 @@ class Purchase_requisition_approve extends Root_Controller
                 $ajax['system_message']='Purchase order already approved.';
                 $this->json_return($ajax);
             }
-            $data['categories']=$this->get_categories();
+            $data['categories']=Ams_helper::get_categories();
             $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
             $this->db->from($this->config->item('table_ams_requisition_file').' item');
@@ -492,18 +492,5 @@ class Purchase_requisition_approve extends Root_Controller
             $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
             $this->json_return($ajax);
         }
-    }
-    public function get_categories()
-    {
-        $this->db->from($this->config->item('table_ams_setup_categories'));
-        $this->db->order_by('ordering');
-        $results=$this->db->get()->result_array();
-        $parents=array();
-        foreach($results as $result)
-        {
-            //$parents[$result['parent']][$result['id']]['value']=$result['id'];
-            $parents[$result['parent']][$result['id']]=$result['name'];
-        }
-        return json_encode($parents);
     }
 }

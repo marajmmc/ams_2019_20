@@ -134,7 +134,6 @@ class Ams_helper
         }
         return $data;
     }
-
     public static function get_child_ids_designation($designation_id)
     {
         $CI =& get_instance();
@@ -163,5 +162,18 @@ class Ams_helper
                 }
             }
         }
+    }
+    public static function get_categories()
+    {
+        $CI = & get_instance();
+        $CI->db->from($CI->config->item('table_ams_setup_categories'));
+        $CI->db->order_by('ordering');
+        $results=$CI->db->get()->result_array();
+        $parents=array();
+        foreach($results as $result)
+        {
+            $parents[$result['parent']][$result['id']]=$result['name'];
+        }
+        return json_encode($parents);
     }
 }

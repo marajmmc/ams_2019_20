@@ -282,7 +282,7 @@ class Purchase_requisition_request extends Root_Controller
             $data['item']['specification']='';
             $data['item']['reason']='';
             $data['item']['remarks']='';
-            $data['categories']=$this->get_categories();
+            $data['categories']=Ams_helper::get_categories();
             $data['suppliers']=Query_helper::get_info($this->config->item('table_ams_setup_suppliers'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
             $data['user_responsible_groups']=Query_helper::get_info($this->config->item('table_ams_setup_responsible_user_group'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"', "user_ids like '%,$user->user_id,%'"),0,0,array('ordering ASC'));
             if(!(sizeof($data['user_responsible_groups'])>0))
@@ -349,7 +349,7 @@ class Purchase_requisition_request extends Root_Controller
                 $ajax['system_message']='Purchase Order already rejected.';
                 $this->json_return($ajax);
             }
-            $data['categories']=$this->get_categories();
+            $data['categories']=Ams_helper::get_categories();
             $data['suppliers']=Query_helper::get_info($this->config->item('table_ams_setup_suppliers'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"'),0,0,array('ordering ASC'));
             $data['user_responsible_groups']=Query_helper::get_info($this->config->item('table_ams_setup_responsible_user_group'),array('id value','name text'),array('status ="'.$this->config->item('system_status_active').'"', "user_ids like '%,$user->user_id,%'"),0,0,array('ordering ASC'));
             if(!(sizeof($data['user_responsible_groups'])>0))
@@ -543,7 +543,7 @@ class Purchase_requisition_request extends Root_Controller
                 $ajax['system_message']='Purchase Order already rejected.';
                 $this->json_return($ajax);
             }
-            $data['categories']=$this->get_categories();
+            $data['categories']=Ams_helper::get_categories();
             $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
             $this->db->from($this->config->item('table_ams_requisition_file').' item');
@@ -653,7 +653,7 @@ class Purchase_requisition_request extends Root_Controller
                 $this->json_return($ajax);
             }
 
-            $data['categories']=$this->get_categories();
+            $data['categories']=Ams_helper::get_categories();
             $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
             $this->db->from($this->config->item('table_ams_requisition_file').' item');
@@ -971,19 +971,6 @@ class Purchase_requisition_request extends Root_Controller
             $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
             $this->json_return($ajax);
         }
-    }
-    public function get_categories() // children
-    {
-        $this->db->from($this->config->item('table_ams_setup_categories'));
-        $this->db->order_by('ordering');
-        $results=$this->db->get()->result_array();
-        $parents=array();
-        foreach($results as $result)
-        {
-            //$parents[$result['parent']][$result['id']]['value']=$result['id'];
-            $parents[$result['parent']][$result['id']]=$result['name'];
-        }
-        return json_encode($parents);
     }
     private function check_validation()
     {

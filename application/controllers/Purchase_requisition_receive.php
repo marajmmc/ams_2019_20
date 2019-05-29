@@ -58,6 +58,10 @@ class Purchase_requisition_receive extends Root_Controller
         {
             $this->system_save_receive();
         }
+        elseif($action=="details")
+        {
+            $this->system_details($id);
+        }
         elseif($action=="set_preference")
         {
             $this->system_set_preference('list');
@@ -381,6 +385,66 @@ class Purchase_requisition_receive extends Root_Controller
         {
             $ajax['status']=false;
             $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+            $this->json_return($ajax);
+        }
+    }
+    private function system_details($id)
+    {
+        if(isset($this->permissions['action0'])&&($this->permissions['action0']==1))
+        {
+            if($id>0)
+            {
+                $item_id=$id;
+            }
+            else
+            {
+                $item_id=$this->input->post('id');
+            }
+            //$data['item']=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$item_id),1,0,array('id ASC'));
+            $this->db->from($this->config->item('table_ams_requisition_request').' item');
+            $this->db->select('item.*, category.name category_name');
+
+            $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
+
+            $this->db->where('item.status !=',$this->config->item('system_status_delete'));
+            $this->db->where('item.id',$item_id);
+            $data['item']=$this->db->get()->row_array();
+            if(!$data['item'])
+            {
+                System_helper::invalid_try(__FUNCTION__,$item_id,'Forward Non Exists');
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Try.';
+                $this->json_return($ajax);
+            }
+
+            $data['categories']=Ams_helper::get_categories();
+            $data['info_basic']=Ams_helper::get_basic_info($data['item']);
+
+            $this->db->from($this->config->item('table_ams_requisition_file').' item');
+            $this->db->where('item.status =',$this->config->item('system_status_active'));
+            $this->db->order_by('item.ordering','ASC');
+            $this->db->order_by('item.id','ASC');
+            $this->db->where('item.purpose',$this->config->item('system_purpose_requisition_request'));
+            $this->db->where('item.purchase_order_id',$item_id);
+            $data['files']=$this->db->get()->result_array();
+
+            $data['title']="Purchase Order Details :: ". $data['item']['id'];
+            $ajax['status']=true;
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->common_view_location."/details",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/details/'.$item_id);
+            $this->json_return($ajax);
+
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
             $this->json_return($ajax);
         }
     }
