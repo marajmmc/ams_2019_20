@@ -31,7 +31,7 @@ class Purchase_requisition_payment extends Root_Controller
         $this->lang->language['LABEL_STATUS_PAYMENT_APPROVE']='Approve Status';
 
         $this->lang->language['LABEL_DATE_PAYMENT']='Payment Date';
-        $this->lang->language['LABEL_PAYMENT_ADVANCE']='Is Advance';
+        $this->lang->language['LABEL_IS_ADVANCE']='Is Advance';
         $this->lang->language['LABEL_AMOUNT']='Paid Amount';
         $this->lang->language['LABEL_REVISION_COUNT']='Revision Count (Edit Payment)';
     }
@@ -136,7 +136,7 @@ class Purchase_requisition_payment extends Root_Controller
         {
             $data['id']= 1;
             $data['date_payment']= 1;
-            $data['payment_advance']= 1;
+            $data['is_advance']= 1;
             $data['amount']= 1;
             $data['remarks']= 1;
             $data['revision_count']= 1;
@@ -202,7 +202,7 @@ class Purchase_requisition_payment extends Root_Controller
 
         $this->db->where('item.status',$this->config->item('system_status_active'));
         $this->db->where('item.status_approve',$this->config->item('system_status_approved'));
-        //$this->db->where('item.status_payment_approve',$this->config->item('system_status_pending'));
+        $this->db->where('item.status_payment_approve',$this->config->item('system_status_pending'));
         $this->db->order_by('item.id','DESC');
         $items=$this->db->get()->result_array();
         /*foreach($items as &$item)
@@ -280,7 +280,7 @@ class Purchase_requisition_payment extends Root_Controller
             $data['item']=$this->db->get()->row_array();
             if(!$data['item'])
             {
-                System_helper::invalid_try('Forward Non Exists',$item_id);
+                System_helper::invalid_try('Payment Approved Non Exists',$item_id);
                 $ajax['status']=false;
                 $ajax['system_message']='Invalid Requisition.';
                 $this->json_return($ajax);
@@ -297,17 +297,20 @@ class Purchase_requisition_payment extends Root_Controller
                 $ajax['system_message']='Purchase Order already rejected.';
                 $this->json_return($ajax);
             }
+
+            $data['payments']=Query_helper::get_info($this->config->item('table_ams_requisition_payment'),array('*'),array('purchase_order_id ='.$item_id));
+
             //$data['categories']=$this->get_parent_wise_task();
             $data['info_basic']=Ams_helper::get_basic_info($data['item']);
 
-            $data['title']="Purchase Order Forward";
+            $data['title']="Purchase Order Payment Approved";
             $ajax['status']=true;
-            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/payment",$data,true));
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/payment_approve",$data,true));
             if($this->message)
             {
                 $ajax['system_message']=$this->message;
             }
-            $ajax['system_page_url']=site_url($this->controller_url.'/index/payment/'.$item_id);
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/payment_approve/'.$item_id);
             $this->json_return($ajax);
         }
         else
@@ -331,38 +334,11 @@ class Purchase_requisition_payment extends Root_Controller
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->json_return($ajax);
             }
-            if(!$item_head['status_payment_approve'])
+            if(!$item_head['status_payment_approve']==$this->config->item('system_status_approved'))
             {
                 $ajax['status']=false;
-                $ajax['system_message']='Approved/Rollback/Reject field is required.';
+                $ajax['system_message']='Approved field is required.';
                 $this->json_return($ajax);
-            }
-            if($item_head['status_payment_approve']==$this->config->item('system_status_rollback'))
-            {
-                if(!($item_head['remarks_payment']))
-                {
-                    $ajax['status']=false;
-                    $ajax['system_message']='Rollback remarks field is required.';
-                    $this->json_return($ajax);
-                }
-            }
-            else if($item_head['status_payment_approve']==$this->config->item('system_status_rejected'))
-            {
-                if(!($item_head['remarks_payment']))
-                {
-                    $ajax['status']=false;
-                    $ajax['system_message']='Reject remarks field is required.';
-                    $this->json_return($ajax);
-                }
-            }
-            else
-            {
-                if($item_head['status_payment_approve']!=$this->config->item('system_status_approved'))
-                {
-                    $ajax['status']=false;
-                    $ajax['system_message']='Approved/Rollback/Reject field is required.';
-                    $this->json_return($ajax);
-                }
             }
         }
         else
@@ -476,7 +452,7 @@ class Purchase_requisition_payment extends Root_Controller
             $data['item']['id']=0;
             $data['item']['item_id']=$id;
             $data['item']['date_payment']=time();
-            $data['item']['payment_advance']=0;
+            $data['item']['is_advance']=0;
             $data['item']['amount']='';
             $data['item']['remarks']='';
 

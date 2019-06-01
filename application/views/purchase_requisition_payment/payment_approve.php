@@ -95,6 +95,60 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             </tr>
             </tbody>
         </table>
+        <div class="row">
+            <div class="col-md-3">
+
+            </div>
+            <div class="col-md-6">
+                <table class="table table-bordered table-responsive">
+                    <thead>
+                    <tr>
+                        <th style="width: 10px;"><?php echo $CI->lang->line('LABEL_ID'); ?></th>
+                        <th style="width: 150px"><?php echo $CI->lang->line('LABEL_DATE_PAYMENT'); ?></th>
+                        <th style="width: 10px"><?php echo $CI->lang->line('LABEL_IS_ADVANCE'); ?></th>
+                        <th style="width: 150px" class="text-right"><?php echo $CI->lang->line('LABEL_AMOUNT'); ?></th>
+                        <th><?php echo $CI->lang->line('LABEL_REMARKS'); ?></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    $amount_paid=0;
+                    foreach($payments as $payment)
+                    {
+                        $amount_paid+=$payment['amount'];
+                        ?>
+                        <tr>
+                            <td><?php echo $payment['id']?></td>
+                            <td><?php echo System_helper::display_date($payment['date_payment'])?></td>
+                            <td><?php echo $payment['is_advance']?></td>
+                            <td class="text-right"><?php echo System_helper::get_string_amount($payment['amount'])?></td>
+                            <td><?php echo nl2br($payment['remarks'])?></td>
+                        </tr>
+                    <?php
+                    }
+                    ?>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-right">Total Paid:</th>
+                        <th class="text-right"><?php echo System_helper::get_string_amount($amount_paid)?></th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-right">Total Price:</th>
+                        <th class="text-right"><?php echo System_helper::get_string_amount($item['amount_price_total'])?></th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-right">Due:</th>
+                        <th class="text-right"><?php echo System_helper::get_string_amount($item['amount_price_total']-$amount_paid)?></th>
+                        <th></th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <!--<div class="col-md-3">&nbsp;</div>-->
+        </div>
         <hr/>
         <div class="row show-grid">
             <div class="col-xs-4">
@@ -104,8 +158,6 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <select id="status_payment_approve" class="form-control" name="item[status_payment_approve]">
                     <option value=""><?php echo $CI->lang->line('SELECT');?></option>
                     <option value="<?php echo $this->config->item('system_status_approved')?>"><?php echo $this->config->item('system_status_approved')?></option>
-                    <option value="<?php echo $this->config->item('system_status_rollback')?>"><?php echo $this->config->item('system_status_rollback')?></option>
-                    <option value="<?php echo $this->config->item('system_status_rejected')?>"><?php echo $this->config->item('system_status_rejected')?></option>
                 </select>
             </div>
         </div>

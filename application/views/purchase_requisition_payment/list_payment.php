@@ -131,15 +131,6 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             {
                 element.html(get_string_amount(value));
             }
-            if(column=='payment_advance')
-            {
-                element.html('No');
-                if(value==1)
-                {
-                    element.html('Yes');
-                }
-
-            }
 
             return element[0].outerHTML;
 
@@ -193,7 +184,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 [
                     { text: '<?php echo $CI->lang->line('LABEL_ID'); ?>', dataField: 'id',width:'50',cellsAlign:'right',hidden: <?php echo $system_preference_items['id']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_DATE_PAYMENT'); ?>', dataField: 'date_payment',width:'100', hidden: <?php echo $system_preference_items['date_payment']?0:1;?>},
-                    { text: '<?php echo $CI->lang->line('LABEL_PAYMENT_ADVANCE'); ?>', dataField: 'payment_advance',width:'50',filtertype: 'list',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['payment_advance']?0:1;?>},
+                    { text: '<?php echo $CI->lang->line('LABEL_IS_ADVANCE'); ?>', dataField: 'is_advance',width:'50',filtertype: 'list',cellsrenderer: cellsrenderer, hidden: <?php echo $system_preference_items['is_advance']?0:1;?>},
                     { text: '<?php echo $CI->lang->line('LABEL_AMOUNT'); ?>', dataField: 'amount',width:'120', hidden: <?php echo $system_preference_items['amount']?0:1;?>,cellsrenderer: cellsrenderer,aggregates: ['sum'],aggregatesrenderer:aggregatesrenderer_amount,
                         initeditor: function (row, cellvalue, editor, celltext, pressedkey)
                         {

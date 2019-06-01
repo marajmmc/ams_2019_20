@@ -64,11 +64,11 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
         </div>
         <div class="row show-grid">
             <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_PAYMENT_ADVANCE');?><span style="color:#FF0000">*</span></label>
+                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_IS_ADVANCE');?><span style="color:#FF0000">*</span></label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <input type="radio" name="item[payment_advance]" id="payment_advance" class=" " value="1" <?php if($item['payment_advance']==1){echo "checked='checked'";}?> /> Yes
-                <input type="radio" name="item[payment_advance]" id="payment_advance" class=" " value="0" <?php if($item['payment_advance']==0){echo "checked='checked'";}?> /> No
+                <input type="radio" name="item[is_advance]" id="is_advance" class=" " value="<?php echo $CI->config->item('system_status_yes')?>" <?php if($item['is_advance']==$CI->config->item('system_status_yes')){echo "checked='checked'";}?> /> Yes
+                <input type="radio" name="item[is_advance]" id="is_advance" class=" " value="<?php echo $CI->config->item('system_status_no')?>" <?php if($item['is_advance']==$CI->config->item('system_status_no')){echo "checked='checked'";}?> /> No
             </div>
         </div>
         <div class="row show-grid">
@@ -104,7 +104,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
     function calculate_total()
     {
         $('#amount_due').html('0.00');
-        var amount_total=parseFloat(<?php echo $amount_total;?>);
+        var amount_total=parseFloat(<?php echo ($amount_total-$amount_total_paid);?>);
         var amount=parseFloat($('#amount').val());
         var amount_due=get_string_amount(amount_total-amount);
         $('#amount_due').html(amount_due);
