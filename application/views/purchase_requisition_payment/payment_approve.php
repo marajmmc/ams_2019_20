@@ -113,16 +113,28 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     <tbody>
                     <?php
                     $amount_paid=0;
-                    foreach($payments as $payment)
+                    if(sizeof($payments)>0)
                     {
-                        $amount_paid+=$payment['amount'];
+
+                        foreach($payments as $payment)
+                        {
+                            $amount_paid+=$payment['amount'];
+                            ?>
+                            <tr>
+                                <td><?php echo $payment['id']?></td>
+                                <td><?php echo System_helper::display_date($payment['date_payment'])?></td>
+                                <td><?php echo $payment['is_advance']?></td>
+                                <td class="text-right"><?php echo System_helper::get_string_amount($payment['amount'])?></td>
+                                <td><?php echo nl2br($payment['remarks'])?></td>
+                            </tr>
+                        <?php
+                        }
+                    }
+                    else
+                    {
                         ?>
                         <tr>
-                            <td><?php echo $payment['id']?></td>
-                            <td><?php echo System_helper::display_date($payment['date_payment'])?></td>
-                            <td><?php echo $payment['is_advance']?></td>
-                            <td class="text-right"><?php echo System_helper::get_string_amount($payment['amount'])?></td>
-                            <td><?php echo nl2br($payment['remarks'])?></td>
+                            <td colspan="5" class="text-center text-danger">No Payment.</td>
                         </tr>
                     <?php
                     }
