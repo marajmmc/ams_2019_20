@@ -50,6 +50,14 @@ class Purchase_requisition_receive extends Root_Controller
         {
             $this->system_get_items_all();
         }
+        elseif($action=="edit")
+        {
+            $this->system_edit($id);
+        }
+        elseif($action=="save")
+        {
+            $this->system_save();
+        }
         elseif($action=="receive")
         {
             $this->system_receive($id);
@@ -227,6 +235,143 @@ class Purchase_requisition_receive extends Root_Controller
         }*/
         $this->json_return($items);
     }
+    private function system_edit($id)
+    {
+        if(isset($this->permissions['action2'])&&($this->permissions['action2']==1))
+        {
+            if($id>0)
+            {
+                $item_id=$id;
+            }
+            else
+            {
+                $item_id=$this->input->post('id');
+            }
+
+            $data['assets']=Query_helper::get_info($this->config->item('table_ams_assets'),array('*'),array('purchase_order_id ='.$item_id, 'status!="'.$this->config->item('system_status_delete').'"'));
+
+            $this->db->from($this->config->item('table_ams_requisition_request').' item');
+            $this->db->select('item.*, category.name category_name, category.prefix');
+
+            $this->db->join($this->config->item('table_ams_setup_categories').' category','category.id=item.category_id','INNER');
+            $this->db->join($this->config->item('table_ams_setup_suppliers').' supplier','supplier.id=item.supplier_id','LEFT');
+            $this->db->select('supplier.name supplier_name');
+
+            $this->db->where('item.status !=',$this->config->item('system_status_delete'));
+            $this->db->where('item.id',$item_id);
+            $data['item']=$this->db->get()->row_array();
+            if(!$data['item'])
+            {
+                System_helper::invalid_try('Receive Non Exists',$item_id);
+                $ajax['status']=false;
+                $ajax['system_message']='Invalid Requisition.';
+                $this->json_return($ajax);
+            }
+            if($data['item']['status']==$this->config->item('system_status_delete'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Purchase Order deleted.';
+                $this->json_return($ajax);
+            }
+            if($data['item']['status_receive']==$this->config->item('system_status_received'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Purchase order already received.';
+                $this->json_return($ajax);
+            }
+            if($data['item']['status_approve']!=$this->config->item('system_status_approved'))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Purchase order is not approved.';
+                $this->json_return($ajax);
+            }
+            $data['categories']=$this->get_parent_wise_task();
+            $data['info_basic']=Ams_helper::get_basic_info($data['item']);
+
+            $data['title']="Purchase Order Receive Edit";
+            $ajax['status']=true;
+            $ajax['system_content'][]=array("id"=>"#system_content","html"=>$this->load->view($this->controller_url."/edit",$data,true));
+            if($this->message)
+            {
+                $ajax['system_message']=$this->message;
+            }
+            $ajax['system_page_url']=site_url($this->controller_url.'/index/edit/'.$item_id);
+            $this->json_return($ajax);
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+    }
+    private function system_save()
+    {
+        $id = $this->input->post("id");
+        $user = User_helper::get_user();
+        $time=time();
+        $item_head=$this->input->post('item');
+        $items=$this->input->post('items');
+
+        if($id>0)
+        {
+            if(!((isset($this->permissions['action2']) && ($this->permissions['action2']==1))))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+                $this->json_return($ajax);
+            }
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
+            $this->json_return($ajax);
+        }
+
+        $this->db->trans_start();  //DB Transaction Handle START
+
+        $data=array();
+
+        $data['date_received']=$time;
+        $data['user_received']=$user->user_id;
+        $data['date_warranty_start']=System_helper::get_time($item_head['date_warranty_start']);
+        $data['date_warranty_end']=System_helper::get_time($item_head['date_warranty_end']);
+        $data['depreciation_rate']=$item_head['depreciation_rate'];
+        $data['depreciation_year']=$item_head['depreciation_year'];
+        Query_helper::update($this->config->item('table_ams_requisition_request'),$data,array('id='.$id));
+
+        for($i=0; $i<sizeof($items); $i++)
+        {
+            if($items[$i]['receive']==$this->config->item('system_status_received'))
+            {
+                //$result=Query_helper::get_info($this->config->item('table_ams_assets'),array('MAX(ams_assets.barcode) as number_max'),array('purchase_order_id ='.$id),1);
+                $result=Query_helper::get_info($this->config->item('table_ams_assets'),array('MAX(ams_assets.barcode) as number_max'),array(),1);
+
+                $data=array();
+                $data['purchase_order_id']=$id;
+                $data['barcode']=$result['number_max']+1;
+                $data['serial_no']=$items[$i]['serial_no'];
+                $data['date_created']=$time;
+                $data['user_created']=$user->user_id;
+                Query_helper::add($this->config->item('table_ams_assets'),$data, false);
+            }
+        }
+
+        $this->db->trans_complete();   //DB Transaction Handle END
+
+        if ($this->db->trans_status() === TRUE)
+        {
+            $this->message=$this->lang->line("MSG_SAVED_SUCCESS");
+            $this->system_list();
+        }
+        else
+        {
+            $ajax['status']=false;
+            $ajax['system_message']=$this->lang->line("MSG_SAVED_FAIL");
+            $this->json_return($ajax);
+        }
+    }
     private function system_receive($id)
     {
         if(isset($this->permissions['action7'])&&($this->permissions['action7']==1))
@@ -303,7 +448,6 @@ class Purchase_requisition_receive extends Root_Controller
         $user = User_helper::get_user();
         $time=time();
         $item_head=$this->input->post('item');
-        $items=$this->input->post('items');
 
         if($id>0)
         {
@@ -313,12 +457,12 @@ class Purchase_requisition_receive extends Root_Controller
                 $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
                 $this->json_return($ajax);
             }
-            /*if($item_head['status_receive']!=$this->config->item('system_status_received'))
+            if($item_head['status_receive']!=$this->config->item('system_status_received'))
             {
                 $ajax['status']=false;
                 $ajax['system_message']='Receive Field is required.';
                 $this->json_return($ajax);
-            }*/
+            }
         }
         else
         {
@@ -326,53 +470,53 @@ class Purchase_requisition_receive extends Root_Controller
             $ajax['system_message']=$this->lang->line("YOU_DONT_HAVE_ACCESS");
             $this->json_return($ajax);
         }
-        /*$status_empty=false;
-        if(sizeof($items)>0)
+
+        $assets=Query_helper::get_info($this->config->item('table_ams_assets'),array('*'),array('purchase_order_id ='.$id, 'status!="'.$this->config->item('system_status_delete').'"'));
+        $result=Query_helper::get_info($this->config->item('table_ams_requisition_request'),array('*'),array('id ='.$id, 'status!="'.$this->config->item('system_status_delete').'"'),1);
+        if(!$result)
         {
-            for($i=0; $i<sizeof($items); $i++)
-            {
-                if(!($items[$i]))
-                {
-                    $status_empty=true;
-                    break;
-                }
-            }
+            System_helper::invalid_try('Receive Non Exists',$id);
+            $ajax['status']=false;
+            $ajax['system_message']='Invalid Requisition.';
+            $this->json_return($ajax);
         }
-        if($status_empty)
+        if($result['status']==$this->config->item('system_status_delete'))
         {
             $ajax['status']=false;
-            $ajax['system_message']='Serial No/ID field is required.';
+            $ajax['system_message']='Purchase Order deleted.';
             $this->json_return($ajax);
-        }*/
+        }
+        if($result['status_receive']==$this->config->item('system_status_received'))
+        {
+            $ajax['status']=false;
+            $ajax['system_message']='Purchase order already received.';
+            $this->json_return($ajax);
+        }
+        if($result['status_approve']!=$this->config->item('system_status_approved'))
+        {
+            $ajax['status']=false;
+            $ajax['system_message']='Purchase order is not approved.';
+            $this->json_return($ajax);
+        }
+        if(($result['quantity_total']-sizeof($assets))>0)
+        {
+            if(!($item_head['remarks_receive']))
+            {
+                $ajax['status']=false;
+                $ajax['system_message']='Receive remarks field is required.';
+                $this->json_return($ajax);
+            }
+        }
+
         $this->db->trans_start();  //DB Transaction Handle START
 
         $data=array();
 
         $data['date_received']=$time;
         $data['user_received']=$user->user_id;
-        $data['date_warranty_start']=System_helper::get_time($item_head['date_warranty_start']);
-        $data['date_warranty_end']=System_helper::get_time($item_head['date_warranty_end']);
-        $data['depreciation_rate']=$item_head['depreciation_rate'];
-        $data['depreciation_year']=$item_head['depreciation_year'];
         $data['remarks_receive']=$item_head['remarks_receive'];
         $data['status_receive']=$item_head['status_receive'];
         Query_helper::update($this->config->item('table_ams_requisition_request'),$data,array('id='.$id));
-
-        for($i=0; $i<sizeof($items); $i++)
-        {
-            if($items[$i]['receive']==1)
-            {
-                $result=Query_helper::get_info($this->config->item('table_ams_assets'),array('MAX(ams_assets.barcode) as number_max'),array('purchase_order_id ='.$id),1);
-
-                $data=array();
-                $data['purchase_order_id']=$id;
-                $data['barcode']=$result['number_max']+1;
-                $data['serial_no']=$items[$i]['serial_no'];
-                $data['date_created']=$time;
-                $data['user_created']=$user->user_id;
-                Query_helper::add($this->config->item('table_ams_assets'),$data, false);
-            }
-        }
 
         $this->db->trans_complete();   //DB Transaction Handle END
 

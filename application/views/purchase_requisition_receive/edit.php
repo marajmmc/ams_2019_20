@@ -7,6 +7,13 @@ $action_buttons[]=array
     'label'=>$CI->lang->line("ACTION_BACK"),
     'href'=>site_url($CI->controller_url)
 );
+$action_buttons[]=array
+(
+    'type'=>'button',
+    'label'=>$CI->lang->line("ACTION_SAVE"),
+    'id'=>'button_action_save',
+    'data-form'=>'#save_form'
+);
 $action_buttons[]=array(
     'type'=>'button',
     'label'=>$CI->lang->line("ACTION_CLEAR"),
@@ -16,7 +23,7 @@ $action_buttons[]=array(
 $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
 
 ?>
-<form id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save_receive');?>" method="post">
+<form id="save_form" action="<?php echo site_url($CI->controller_url.'/index/save');?>" method="post">
     <input type="hidden" id="id" name="id" value="<?php echo $item['id']?>" />
     <div class="row widget">
         <div class="widget-header">
@@ -115,6 +122,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
             <tr>
                 <th>Barcode <small>(Auto Generated)</small></th>
                 <th>Serial No</th>
+                <th>Receive/Pending</th>
             </tr>
             </thead>
             <tbody>
@@ -127,27 +135,51 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                     <tr>
                         <td><?php echo Barcode_helper::get_barcode_asset($item['prefix'], $asset['barcode'])?></td>
                         <td><?php echo $asset['serial_no']?></td>
+                        <td></td>
                     </tr>
                 <?php
                 }
-                if(($item['quantity_total']-sizeof($assets))>0)
+                for($i=0; $i<($item['quantity_total']-sizeof($assets));$i++)
                 {
                     ?>
                     <tr>
-                        <td colspan="2" class="text-center bg-danger">
-                            Not Receive: <?php echo System_helper::get_string_quantity($item['quantity_total']-sizeof($assets));?>
+                        <td></td>
+                        <td><input type="text" name="items[<?php echo $i;?>][serial_no]" class="form-control" value=""/></td>
+                        <td>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="radio" name="items[<?php echo $i;?>][receive]" value="<?php echo $CI->config->item('system_status_received')?>"><span class="label label-success"><?php echo $CI->config->item('system_status_received')?></span>
+                                </label>
+                                <label>
+                                    <input type="radio" name="items[<?php echo $i;?>][receive]" value="<?php echo $CI->config->item('system_status_pending')?>" checked="true" ><span class="label label-danger"><?php echo $CI->config->item('system_status_pending')?></span>
+                                </label>
+                            </div>
                         </td>
                     </tr>
-                    <?php
+                <?php
                 }
             }
             else
             {
-                ?>
-                <tr>
-                    <td colspan="3" class="text-center text-danger">No Asset Received.</td>
-                </tr>
-            <?php
+                for($i=0; $i<$item['quantity_total'];$i++)
+                {
+                    ?>
+                    <tr>
+                        <td></td>
+                        <td><input type="text" name="items[<?php echo $i;?>][serial_no]" class="form-control" value=""/></td>
+                        <td>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="radio" name="items[<?php echo $i;?>][receive]" value="<?php echo $CI->config->item('system_status_received')?>"><span class="label label-success"><?php echo $CI->config->item('system_status_received')?></span>
+                                </label>
+                                <label>
+                                    <input type="radio" name="items[<?php echo $i;?>][receive]" value="<?php echo $CI->config->item('system_status_pending')?>" checked="true" ><span class="label label-danger"><?php echo $CI->config->item('system_status_pending')?></span>
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                <?php
+                }
             }
             ?>
             </tbody>
@@ -157,7 +189,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right">Warranty Date Start</label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <?php echo System_helper::display_date($item['date_warranty_start'])?>
+                <input type="text" name="item[date_warranty_start]" id="date_warranty_start" value="<?php echo System_helper::display_date($item['date_warranty_start'])?>" class="form-control datepicker" readonly>
             </div>
         </div>
         <div class="row show-grid">
@@ -165,7 +197,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right">Warranty End Start</label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <?php echo System_helper::display_date($item['date_warranty_end'])?>
+                <input type="text" name="item[date_warranty_end]" id="date_warranty_end" value="<?php echo System_helper::display_date($item['date_warranty_end'])?>" class="form-control datepicker" readonly>
             </div>
         </div>
         <div class="row show-grid">
@@ -173,7 +205,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right">Depreciation Rate</label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <?php echo $item['depreciation_rate']?>
+                <input type="text" name="item[depreciation_rate]" id="depreciation_rate" value="<?php echo $item['depreciation_rate']?>" class="form-control float_type_positive" >
             </div>
         </div>
         <div class="row show-grid">
@@ -181,50 +213,7 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
                 <label class="control-label pull-right">Depreciation Year</label>
             </div>
             <div class="col-sm-4 col-xs-8">
-                <?php echo $item['depreciation_year']?>
-            </div>
-        </div>
-        <hr/>
-        <div class="row show-grid">
-            <div class="col-xs-4">
-                <label class="control-label pull-right">
-                    Receive <?php echo $CI->lang->line('LABEL_REMARKS');?>
-                    <?php
-                    if(($item['quantity_total']-sizeof($assets))>0)
-                    {
-                        ?>
-                        <small class="text-danger">* <br/>must need remarks for receive completed</small>
-                    <?php
-                    }
-                    ?>
-                </label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <textarea name="item[remarks_receive]" id="remarks_receive" class="form-control"><?php echo $item['remarks_receive']?></textarea>
-            </div>
-        </div>
-        <div class="row show-grid">
-            <div class="col-xs-4">
-                <label class="control-label pull-right"><?php echo $CI->lang->line('LABEL_RECEIVED');?><span style="color:#FF0000">*</span></label>
-            </div>
-            <div class="col-sm-4 col-xs-8">
-                <select id="status_receive" class="form-control" name="item[status_receive]">
-                    <option value="<?php echo $this->config->item('system_status_pending')?>"><?php echo $this->config->item('system_status_pending')?></option>
-                    <option value="<?php echo $this->config->item('system_status_received')?>"><?php echo $this->config->item('system_status_received')?></option>
-                </select>
-            </div>
-        </div>
-        <div class="row show-grid">
-            <div class="col-xs-4">
-
-            </div>
-            <div class="col-sm-4 col-xs-4">
-                <div class="action_button pull-right">
-                    <button id="button_action_save" type="button" class="btn" data-form="#save_form" data-message-confirm="Are You Sure Purchase Order Receive Complete?">Save</button>
-                </div>
-            </div>
-            <div class="col-sm-4 col-xs-4">
-
+                <input type="text" name="item[depreciation_year]" id="depreciation_year" value="<?php echo $item['depreciation_year']?>" class="form-control float_type_positive" >
             </div>
         </div>
     </div>
@@ -235,8 +224,6 @@ $CI->load->view('action_buttons',array('action_buttons'=>$action_buttons));
     {
         system_off_events();
         system_preset({controller:'<?php echo $CI->router->class; ?>'});
-        $(".datepicker").datepicker({dateFormat : display_date_format});
-
+        $(".datepicker").datepicker({dateFormat : display_date_format,changeMonth: true,changeYear: true});
     });
 </script>
-
